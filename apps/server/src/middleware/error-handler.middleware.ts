@@ -1,4 +1,6 @@
 import type { Context, Next } from "hono";
+
+import { STATUS_CODES } from "@/lib/constants";
 import { ErrorCodes } from "../lib/types/errors";
 import { logger } from "../lib/utils/logger";
 
@@ -56,7 +58,7 @@ export async function errorHandler(c: Context, next: Next) {
 				},
 				requestId,
 			},
-			500,
+			STATUS_CODES.INTERNAL_SERVER_ERROR,
 		);
 	}
 }

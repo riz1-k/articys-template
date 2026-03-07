@@ -1,5 +1,6 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import type { Context, Next } from "hono";
+import { STATUS_CODES } from "@/lib/constants/status-codes";
 import { logger } from "../lib/utils/logger";
 
 export async function requestLogger(c: Context, next: Next) {
@@ -26,12 +27,12 @@ export async function requestLogger(c: Context, next: Next) {
 		userAgent: c.req.header("user-agent"),
 	};
 
-	if (status >= 500) {
+	if (status >= STATUS_CODES.INTERNAL_SERVER_ERROR) {
 		logger.error(logMeta, "http request");
 		return;
 	}
 
-	if (status >= 400) {
+	if (status >= STATUS_CODES.BAD_REQUEST) {
 		logger.warn(logMeta, "http request");
 		return;
 	}

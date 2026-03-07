@@ -4,6 +4,10 @@ import { toast } from "sonner";
 import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
+import {
+	MIN_NAME_LENGTH,
+	MIN_PASSWORD_LENGTH,
+} from "@/lib/constants/validation";
 
 import Loader from "./loader";
 import { Button } from "./ui/button";
@@ -48,9 +52,19 @@ export default function SignUpForm({
 		},
 		validators: {
 			onSubmit: z.object({
-				name: z.string().min(2, "Name must be at least 2 characters"),
+				name: z
+					.string()
+					.min(
+						MIN_NAME_LENGTH,
+						`Name must be at least ${MIN_NAME_LENGTH} characters`,
+					),
 				email: z.email("Invalid email address"),
-				password: z.string().min(8, "Password must be at least 8 characters"),
+				password: z
+					.string()
+					.min(
+						MIN_PASSWORD_LENGTH,
+						`Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+					),
 			}),
 		},
 	});

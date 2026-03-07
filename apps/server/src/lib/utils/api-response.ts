@@ -1,5 +1,7 @@
 import type { Context } from "hono";
 
+import { STATUS_CODES } from "@/lib/constants";
+
 export interface ApiResponse<T> {
 	success: boolean;
 	data?: T;
@@ -39,7 +41,7 @@ export function success<T>(
 			meta,
 			requestId,
 		} as ApiResponse<T>,
-		200,
+		STATUS_CODES.OK,
 	);
 }
 
@@ -52,7 +54,7 @@ export function created<T>(c: Context, data: T): Response {
 			data,
 			requestId,
 		} as ApiResponse<T>,
-		201,
+		STATUS_CODES.CREATED,
 	);
 }
 
@@ -78,10 +80,10 @@ export function paginated<T>(
 			},
 			requestId,
 		} as PaginatedResponse<T>,
-		200,
+		STATUS_CODES.OK,
 	);
 }
 
 export function noContent(c: Context): Response {
-	return c.body(null, 204);
+	return c.body(null, STATUS_CODES.NO_CONTENT);
 }

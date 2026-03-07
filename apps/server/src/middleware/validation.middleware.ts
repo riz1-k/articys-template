@@ -1,5 +1,7 @@
 import type { MiddlewareHandler } from "hono";
 import type { z } from "zod";
+
+import { STATUS_CODES } from "@/lib/constants";
 import { AppError } from "./error-handler.middleware";
 
 export function validateBody<T extends z.ZodType>(
@@ -16,7 +18,12 @@ export function validateBody<T extends z.ZodType>(
 				message: issue.message,
 			}));
 
-			throw new AppError(400, "Validation failed", "VALIDATION_ERROR", errors);
+			throw new AppError(
+				STATUS_CODES.BAD_REQUEST,
+				"Validation failed",
+				"VALIDATION_ERROR",
+				errors,
+			);
 		}
 
 		c.set("validatedBody", result.data);
@@ -38,7 +45,12 @@ export function validateQuery<T extends z.ZodType>(
 				message: issue.message,
 			}));
 
-			throw new AppError(400, "Validation failed", "VALIDATION_ERROR", errors);
+			throw new AppError(
+				STATUS_CODES.BAD_REQUEST,
+				"Validation failed",
+				"VALIDATION_ERROR",
+				errors,
+			);
 		}
 
 		c.set("validatedQuery", result.data);
@@ -60,7 +72,12 @@ export function validateParams<T extends z.ZodType>(
 				message: issue.message,
 			}));
 
-			throw new AppError(400, "Validation failed", "VALIDATION_ERROR", errors);
+			throw new AppError(
+				STATUS_CODES.BAD_REQUEST,
+				"Validation failed",
+				"VALIDATION_ERROR",
+				errors,
+			);
 		}
 
 		c.set("validatedParams", result.data);

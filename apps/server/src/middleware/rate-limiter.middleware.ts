@@ -1,4 +1,6 @@
 import type { MiddlewareHandler } from "hono";
+import { MS_IN_SECOND } from "@/lib/constants";
+import { STATUS_CODES } from "@/lib/constants/status-codes";
 import { redis } from "../infrastructure/cache";
 import { logger } from "../lib/utils/logger";
 
@@ -30,12 +32,12 @@ export function rateLimiter(config: RateLimiterConfig): MiddlewareHandler {
 			await redis.zAdd(key, { score: now, value: `${now}` });
 			await redis.zRemRangeByScore(key, windowStart, windowStart);
 			const requestCount = await redis.zCard(key);
-			await redis.expire(key, Math.ceil(windowMs / 1000));
+			await redis.expire(key, Math.ceil(windowMs / MS_IN_SECOND));
 
 			const currentCount = typeof requestCount === "number" ? requestCount : 0;
 
 			c.set("rateLimitRemaining", Math.max(0, maxRequests - currentCount));
-			c.set("rateLimitReset", Math.ceil((now + windowMs) / 1000));
+			c.set("rateLimitReset", Math.ceil((now + windowMs) / MS_IN_SECOND));
 
 			if (currentCount > maxRequests) {
 				logger.warn({ ip, currentCount, maxRequests }, "rate limit exceeded");
@@ -47,11 +49,13 @@ export function rateLimiter(config: RateLimiterConfig): MiddlewareHandler {
 							message: "Too many requests. Please try again later.",
 						},
 					},
-					429,
+					STATUS_CODES.TOO_MANY_REQUESTS,
 					{
 						"X-RateLimit-Limit": String(maxRequests),
 						"X-RateLimit-Remaining": "0",
-						"X-RateLimit-Reset": String(Math.ceil((now + windowMs) / 1000)),
+						"X-RateLimit-Reset": String(
+							Math.ceil((now + windowMs) / MS_IN_SECOND),
+						),
 					},
 				);
 			}
@@ -63,7 +67,7 @@ export function rateLimiter(config: RateLimiterConfig): MiddlewareHandler {
 			);
 			c.res.headers.set(
 				"X-RateLimit-Reset",
-				String(Math.ceil((now + windowMs) / 1000)),
+				String(Math.ceil((now + windowMs) / MS_IN_SECOND)),
 			);
 
 			await next();

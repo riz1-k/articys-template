@@ -1,3 +1,4 @@
+import { MS_IN_SECOND, SECONDS_PER_MINUTE } from "@/lib/constants";
 import { env } from "./env.config";
 
 export const appConfig = {
@@ -7,7 +8,7 @@ export const appConfig = {
 	isTest: env.NODE_ENV === "test",
 
 	rateLimit: {
-		windowMs: 60 * 1000,
+		windowMs: SECONDS_PER_MINUTE * MS_IN_SECOND,
 		maxRequests: 100,
 		keyPrefix: "rl",
 	},

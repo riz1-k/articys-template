@@ -1,4 +1,5 @@
 import type { Hono } from "hono";
+import { STATUS_CODES } from "@/lib/constants/status-codes";
 import { pingCache } from "../infrastructure/cache";
 import { pingDatabase } from "../infrastructure/database";
 
@@ -20,7 +21,7 @@ export function registerHealthRoutes(app: Hono) {
 				},
 				timestamp: new Date().toISOString(),
 			},
-			isHealthy ? 200 : 503,
+			isHealthy ? STATUS_CODES.OK : STATUS_CODES.INTERNAL_SERVER_ERROR,
 		);
 	});
 
