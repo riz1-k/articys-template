@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { auth } from "./auth";
-import { env } from "./env/server";
+import { auth } from "./configs/auth.config";
+import { env } from "./configs/env.config";
 
 const app = new Hono();
 
