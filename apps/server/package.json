@@ -11,7 +11,9 @@
 		"db:push": "drizzle-kit push --config=drizzle.config.ts",
 		"db:generate": "drizzle-kit generate --config=drizzle.config.ts",
 		"db:studio": "drizzle-kit studio --config=drizzle.config.ts",
-		"db:migrate": "drizzle-kit migrate --config=drizzle.config.ts"
+		"db:migrate": "drizzle-kit migrate --config=drizzle.config.ts",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"@t3-oss/env-core": "^0.13.1",
@@ -30,6 +32,7 @@
 		"@types/pg": "^8.16.0",
 		"drizzle-kit": "^0.31.8",
 		"tsdown": "^0.16.5",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	}
 }

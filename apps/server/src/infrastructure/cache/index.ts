@@ -17,3 +17,19 @@ export async function connectCache(): Promise<void> {
 		await redis.connect();
 	}
 }
+
+export async function pingCache(): Promise<boolean> {
+	if (!redis) return false;
+	try {
+		await redis.ping();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+export async function closeCache(): Promise<void> {
+	if (redis) {
+		await redis.quit();
+	}
+}

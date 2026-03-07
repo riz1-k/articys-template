@@ -1,6 +1,27 @@
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { env } from "../../lib/configs/env.config";
 
 import * as schema from "./schema/auth";
 
-export const db = drizzle(env.DATABASE_URL, { schema });
+const pool = new Pool({
+	connectionString: env.DATABASE_URL,
+	max: 10,
+	idleTimeoutMillis: 30000,
+	connectionTimeoutMillis: 5000,
+});
+
+export const db = drizzle(pool, { schema });
+
+export async function pingDatabase(): Promise<boolean> {
+	try {
+		await pool.query("SELECT 1");
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+export async function closeDatabase(): Promise<void> {
+	await pool.end();
+}
