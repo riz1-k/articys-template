@@ -1,5 +1,5 @@
-import { env } from "@articys-template/env/server";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { env } from "../env/server";
 
 import * as schema from "./schema";
 

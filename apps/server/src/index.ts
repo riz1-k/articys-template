@@ -1,8 +1,8 @@
-import { auth } from "@articys-template/auth";
-import { env } from "@articys-template/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { auth } from "./auth";
+import { env } from "./env/server";
 
 const app = new Hono();
 

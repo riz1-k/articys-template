@@ -7,20 +7,25 @@
 		"check-types": "tsc -b",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
 		"dev": "bun run --hot src/index.ts",
-		"start": "bun run dist/index.mjs"
+		"start": "bun run dist/index.mjs",
+		"db:push": "drizzle-kit push --config=drizzle.config.ts",
+		"db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+		"db:studio": "drizzle-kit studio --config=drizzle.config.ts",
+		"db:migrate": "drizzle-kit migrate --config=drizzle.config.ts"
 	},
 	"dependencies": {
-		"@articys-template/auth": "workspace:*",
-		"@articys-template/db": "workspace:*",
-		"@articys-template/env": "workspace:*",
+		"@t3-oss/env-core": "^0.13.1",
 		"better-auth": "catalog:",
 		"dotenv": "catalog:",
+		"drizzle-orm": "^0.45.1",
 		"hono": "^4.8.2",
+		"pg": "^8.17.1",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@articys-template/config": "workspace:*",
 		"@types/bun": "catalog:",
+		"@types/pg": "^8.16.0",
+		"drizzle-kit": "^0.31.8",
 		"tsdown": "^0.16.5",
 		"typescript": "catalog:"
 	}

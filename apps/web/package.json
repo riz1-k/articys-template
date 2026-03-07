@@ -8,8 +8,7 @@
 		"dev": "vite dev"
 	},
 	"dependencies": {
-		"@articys-template/auth": "workspace:*",
-		"@articys-template/env": "workspace:*",
+		"@t3-oss/env-core": "^0.13.1",
 		"@base-ui/react": "^1.0.0",
 		"@tailwindcss/vite": "^4.1.8",
 		"@tanstack/react-form": "^1.28.0",
@@ -35,7 +34,6 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@articys-template/config": "workspace:*",
 		"@tanstack/react-router-devtools": "^1.141.1",
 		"@testing-library/dom": "^10.4.0",
 		"@testing-library/react": "^16.2.0",
