@@ -1,0 +1,24 @@
+{
+  "name": "@articys-template/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@articys-template/db": "workspace:*",
+    "@articys-template/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@articys-template/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
