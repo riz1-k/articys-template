@@ -1,23 +1,14 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import { auth } from "./configs/auth.config";
-import { env } from "./configs/env.config";
+import { corsMiddleware } from "./middleware/cors.middleware";
+import { requestLogger } from "./middleware/request-logger.middleware";
+import { registerAuthRoutes } from "./routes/auth.routes";
 
 const app = new Hono();
 
-app.use(logger());
-app.use(
-	"/*",
-	cors({
-		origin: env.CORS_ORIGIN,
-		allowMethods: ["GET", "POST", "OPTIONS"],
-		allowHeaders: ["Content-Type", "Authorization"],
-		credentials: true,
-	}),
-);
+app.use(requestLogger);
+app.use("/*", corsMiddleware);
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+registerAuthRoutes(app);
 
 app.get("/", (c) => {
 	return c.text("OK");
