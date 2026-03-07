@@ -15,6 +15,7 @@ if (redis) {
 export async function connectCache(): Promise<void> {
 	if (redis) {
 		await redis.connect();
+		logger.info("Redis connected");
 	}
 }
 
