@@ -13,14 +13,12 @@ export const appConfig = {
 	},
 
 	server: {
-		port: Number.parseInt(process.env.PORT ?? "3000", 10),
-		host: process.env.HOST ?? "0.0.0.0",
+		port: env.PORT,
+		host: env.HOST,
 	},
 
 	logging: {
-		level:
-			process.env.LOG_LEVEL ??
-			(env.NODE_ENV === "production" ? "info" : "debug"),
+		level: env.LOG_LEVEL,
 	},
 
 	database: {
