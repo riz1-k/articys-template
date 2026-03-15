@@ -2,17 +2,15 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-
-import { authClient } from "@/lib/auth-client";
+import Loader from "@/components/loader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { authClient } from "@/features/auth/lib/auth-client";
 import {
 	MIN_NAME_LENGTH,
 	MIN_PASSWORD_LENGTH,
 } from "@/lib/constants/validation";
-
-import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 
 export default function SignUpForm({
 	onSwitchToSignIn,
@@ -153,7 +151,12 @@ export default function SignUpForm({
 					</form.Field>
 				</div>
 
-				<form.Subscribe>
+				<form.Subscribe
+					selector={(state) => ({
+						canSubmit: state.canSubmit,
+						isSubmitting: state.isSubmitting,
+					})}
+				>
 					{(state) => (
 						<Button
 							type="submit"

@@ -1,20 +1,24 @@
 import { CheckCircle2, Circle, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-
-import { serverApi, type TodoDto } from "@/lib/server-api";
-
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
 	CardTitle,
-} from "./ui/card";
-import { Checkbox } from "./ui/checkbox";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	useCreateTodoMutation,
+	useDeleteTodoMutation,
+	useTodosQuery,
+	useUpdateTodoMutation,
+} from "@/features/todos/hooks/use-todos";
+import type { TodoDto } from "@/features/todos/types/todo";
 
 interface TodoDashboardProps {
 	userName: string;
@@ -25,34 +29,27 @@ export default function TodoDashboard({
 	userName,
 	userEmail,
 }: TodoDashboardProps) {
-	const [todos, setTodos] = useState<TodoDto[]>([]);
 	const [title, setTitle] = useState("");
 	const [description, setDescription] = useState("");
-	const [isLoading, setIsLoading] = useState(true);
-	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [activeTodoId, setActiveTodoId] = useState<string | null>(null);
 
-	const completedCount = useMemo(
-		() => todos.filter((todo) => todo.completed).length,
-		[todos],
-	);
+	const todosQuery = useTodosQuery();
+	const createTodoMutation = useCreateTodoMutation();
+	const updateTodoMutation = useUpdateTodoMutation();
+	const deleteTodoMutation = useDeleteTodoMutation();
 
-	async function loadTodos() {
-		setIsLoading(true);
+	const todos = todosQuery.data ?? [];
+	const completedCount = todos.filter((todo) => todo.completed).length;
+
+	async function handleRefresh() {
 		try {
-			setTodos(await serverApi.listTodos());
+			await todosQuery.refetch();
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to load todos",
 			);
-		} finally {
-			setIsLoading(false);
 		}
 	}
-
-	useEffect(() => {
-		void loadTodos();
-	}, []);
 
 	async function handleCreateTodo() {
 		if (!title.trim()) {
@@ -60,13 +57,11 @@ export default function TodoDashboard({
 			return;
 		}
 
-		setIsSubmitting(true);
 		try {
-			const newTodo = await serverApi.createTodo({
+			await createTodoMutation.mutateAsync({
 				title: title.trim(),
 				description: description.trim() || null,
 			});
-			setTodos((current) => [newTodo, ...current]);
 			setTitle("");
 			setDescription("");
 			toast.success("Todo created");
@@ -74,20 +69,16 @@ export default function TodoDashboard({
 			toast.error(
 				error instanceof Error ? error.message : "Failed to create todo",
 			);
-		} finally {
-			setIsSubmitting(false);
 		}
 	}
 
 	async function handleToggleTodo(todo: TodoDto) {
 		setActiveTodoId(todo.id);
 		try {
-			const updatedTodo = await serverApi.updateTodo(todo.id, {
+			await updateTodoMutation.mutateAsync({
+				id: todo.id,
 				completed: !todo.completed,
 			});
-			setTodos((current) =>
-				current.map((item) => (item.id === todo.id ? updatedTodo : item)),
-			);
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to update todo",
@@ -100,8 +91,7 @@ export default function TodoDashboard({
 	async function handleDeleteTodo(todoId: string) {
 		setActiveTodoId(todoId);
 		try {
-			await serverApi.deleteTodo(todoId);
-			setTodos((current) => current.filter((todo) => todo.id !== todoId));
+			await deleteTodoMutation.mutateAsync(todoId);
 			toast.success("Todo deleted");
 		} catch (error) {
 			toast.error(
@@ -125,12 +115,15 @@ export default function TodoDashboard({
 								{userName}&apos;s todo board
 							</h1>
 							<p className="mt-2 max-w-2xl text-muted-foreground text-sm">
-								This dashboard is backed by the new authenticated todo CRUD
-								flow, using module boundaries on the server and cookie-based
-								auth via Better Auth.
+								This dashboard is backed by the authenticated todo API, with
+								feature-local hooks handling query state and mutations.
 							</p>
 						</div>
-						<Button variant="outline" onClick={() => void loadTodos()}>
+						<Button
+							variant="outline"
+							onClick={() => void handleRefresh()}
+							disabled={todosQuery.isFetching}
+						>
 							<RefreshCw />
 							Refresh
 						</Button>
@@ -141,8 +134,7 @@ export default function TodoDashboard({
 					<CardHeader>
 						<CardTitle>Create Todo</CardTitle>
 						<CardDescription>
-							Add a new task and watch it flow through the authenticated server
-							module.
+							Add a new task and persist it through the todo feature client.
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
@@ -166,10 +158,10 @@ export default function TodoDashboard({
 						</div>
 						<Button
 							onClick={() => void handleCreateTodo()}
-							disabled={isSubmitting}
+							disabled={createTodoMutation.isPending}
 						>
 							<Plus />
-							{isSubmitting ? "Saving..." : "Add Todo"}
+							{createTodoMutation.isPending ? "Saving..." : "Add Todo"}
 						</Button>
 					</CardContent>
 				</Card>
@@ -182,7 +174,7 @@ export default function TodoDashboard({
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						{isLoading ? (
+						{todosQuery.isLoading ? (
 							<p className="text-muted-foreground">Loading todos...</p>
 						) : todos.length === 0 ? (
 							<div className="border border-border border-dashed p-6 text-center text-muted-foreground">
@@ -279,17 +271,14 @@ export default function TodoDashboard({
 					<CardHeader>
 						<CardTitle>Architecture Notes</CardTitle>
 						<CardDescription>
-							This page demonstrates the same migration path used on the server.
+							This page now uses feature-local APIs and hooks instead of a
+							component-global fetch layer.
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-3 text-muted-foreground">
 						<p>- auth session comes from Better Auth cookies</p>
-						<p>
-							- `/api/todos` is protected by the new identity session service
-						</p>
-						<p>
-							- todo CRUD flows through module use cases and a repository port
-						</p>
+						<p>- todo server state is managed with TanStack Query</p>
+						<p>- route files stay thin and compose feature components</p>
 					</CardContent>
 				</Card>
 			</aside>

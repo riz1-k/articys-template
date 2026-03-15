@@ -1,7 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-
-import TodoDashboard from "@/components/todo-dashboard";
-import { getUser } from "@/functions/get-user";
+import { getUser } from "@/features/auth/server/get-user";
+import TodoDashboard from "@/features/todos/components/todo-dashboard";
 
 export const Route = createFileRoute("/dashboard")({
 	component: RouteComponent,
