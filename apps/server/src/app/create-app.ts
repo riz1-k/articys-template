@@ -4,6 +4,7 @@ import { rateLimiter } from "@/middleware/rate-limiter.middleware";
 import { requestLogger } from "@/middleware/request-logger.middleware";
 import { securityHeaders } from "@/middleware/security-headers.middleware";
 import type { createHealthStatusService } from "@/modules/health/application/create-health-status-service";
+import type { createIdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
 import type { AuthHandler } from "@/modules/identity/presentation/http/auth.routes";
 import { appConfig } from "@/platform/config/app.config";
 import { errorHandler } from "@/platform/http/error-handler";
@@ -13,6 +14,7 @@ import { registerRoutes } from "./register-routes";
 export interface AppDependencies {
 	auth: AuthHandler;
 	healthStatusService: ReturnType<typeof createHealthStatusService>;
+	identitySessionService: ReturnType<typeof createIdentitySessionService>;
 }
 
 export function createApp(
