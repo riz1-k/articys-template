@@ -53,7 +53,7 @@ function HomeComponent() {
 	return (
 		<div className="bg-background">
 			<section className="border-border border-b">
-				<div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:py-16">
+				<div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:py-16">
 					<div className="space-y-6">
 						<div className="inline-flex items-center gap-2 border border-border bg-card px-3 py-1.5 font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
 							<Radar className="size-3.5" />
@@ -154,7 +154,7 @@ function HomeComponent() {
 				</div>
 			</section>
 
-			<section className="mx-auto w-full max-w-6xl px-4 py-10 lg:py-14">
+			<section className="mx-auto w-full max-w-7xl px-4 py-10 lg:py-14">
 				<div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 					<div>
 						<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
@@ -197,7 +197,7 @@ function HomeComponent() {
 			</section>
 
 			<section className="border-border border-y bg-card/40">
-				<div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 lg:grid-cols-[0.8fr_1.2fr] lg:py-14">
+				<div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[0.8fr_1.2fr] lg:py-14">
 					<div className="space-y-3">
 						<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
 							Flow
@@ -242,7 +242,7 @@ function HomeComponent() {
 				</div>
 			</section>
 
-			<section className="mx-auto w-full max-w-6xl px-4 py-10 lg:py-14">
+			<section className="mx-auto w-full max-w-7xl px-4 py-10 lg:py-14">
 				<div className="border border-border bg-card px-5 py-6 sm:px-8 sm:py-8">
 					<div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
 						<div>

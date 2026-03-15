@@ -16,7 +16,7 @@ export default function TodoDashboard({
 	const dashboard = useTodoDashboard();
 
 	return (
-		<div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1.2fr_0.8fr]">
+		<div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[1.2fr_0.8fr]">
 			<section className="space-y-6">
 				<TodoDashboardHero
 					userName={userName}
