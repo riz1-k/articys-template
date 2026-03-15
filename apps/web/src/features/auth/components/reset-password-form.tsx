@@ -1,16 +1,15 @@
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
+import FieldError from "@/components/form/field-error";
+import Alert from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import AuthAlert from "@/features/auth/components/auth-alert";
-import AuthRouteLink from "@/features/auth/components/auth-route-link";
 import { authClient } from "@/features/auth/lib/auth-client";
 import { getPostResetLoginPath } from "@/features/auth/lib/auth-flow";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants/validation";
-import AuthFieldError from "./auth-field-error";
 
 export default function ResetPasswordForm({
 	token,
@@ -83,24 +82,26 @@ export default function ResetPasswordForm({
 					</p>
 				</div>
 
-				<AuthAlert variant="destructive">
+				<Alert variant="destructive">
 					Open the latest reset email, or request a new link if this one has
 					expired.
-				</AuthAlert>
+				</Alert>
 
 				<div className="flex flex-col gap-3 sm:flex-row">
-					<AuthRouteLink
+					<Link
 						to="/forgot-password"
-						callbackURL={callbackURL}
-						label="Request new reset link"
-						className="justify-center border border-border no-underline hover:no-underline"
-					/>
-					<AuthRouteLink
+						search={callbackURL ? { callbackURL } : undefined}
+						className="inline-flex h-8 items-center justify-center border border-border px-2.5 font-medium text-primary text-xs underline-offset-4 transition-all hover:underline"
+					>
+						Request new reset link
+					</Link>
+					<Link
 						to="/login"
-						callbackURL={callbackURL}
-						label="Back to sign in"
-						className="justify-center"
-					/>
+						search={callbackURL ? { callbackURL } : undefined}
+						className="inline-flex h-8 items-center justify-center px-2.5 font-medium text-primary text-xs underline-offset-4 transition-all hover:underline"
+					>
+						Back to sign in
+					</Link>
 				</div>
 			</div>
 		);
@@ -140,7 +141,7 @@ export default function ResetPasswordForm({
 								onBlur={field.handleBlur}
 								onChange={(e) => field.handleChange(e.target.value)}
 							/>
-							<AuthFieldError errors={field.state.meta.errors} />
+							<FieldError errors={field.state.meta.errors} />
 						</div>
 					)}
 				</form.Field>
@@ -157,7 +158,7 @@ export default function ResetPasswordForm({
 								onBlur={field.handleBlur}
 								onChange={(e) => field.handleChange(e.target.value)}
 							/>
-							<AuthFieldError errors={field.state.meta.errors} />
+							<FieldError errors={field.state.meta.errors} />
 						</div>
 					)}
 				</form.Field>
@@ -183,12 +184,13 @@ export default function ResetPasswordForm({
 			<div className="border-border border-t pt-4 text-center">
 				<p className="text-muted-foreground text-sm">
 					Need to start over?{" "}
-					<AuthRouteLink
+					<Link
 						to="/forgot-password"
-						callbackURL={callbackURL}
-						label="Request another link"
-						className="h-auto p-0 text-sm"
-					/>
+						search={callbackURL ? { callbackURL } : undefined}
+						className="text-primary underline-offset-4 hover:underline"
+					>
+						Request another link
+					</Link>
 				</p>
 			</div>
 		</div>

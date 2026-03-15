@@ -1,15 +1,12 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
-interface AuthAlertProps {
+interface AlertProps {
 	children: ReactNode;
 	variant?: "default" | "destructive";
 }
 
-export default function AuthAlert({
-	children,
-	variant = "default",
-}: AuthAlertProps) {
+export default function Alert({ children, variant = "default" }: AlertProps) {
 	return (
 		<div
 			className={cn(

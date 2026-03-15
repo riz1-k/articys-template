@@ -1,8 +1,8 @@
-interface AuthFieldErrorProps {
+interface FieldErrorProps {
 	errors: Array<{ message?: string } | undefined>;
 }
 
-export default function AuthFieldError({ errors }: AuthFieldErrorProps) {
+export default function FieldError({ errors }: FieldErrorProps) {
 	if (!errors.length) {
 		return null;
 	}

@@ -1,19 +1,18 @@
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
+import FieldError from "@/components/form/field-error";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import AuthRouteLink from "@/features/auth/components/auth-route-link";
 import { authClient } from "@/features/auth/lib/auth-client";
 import { getAuthSuccessPath } from "@/features/auth/lib/auth-flow";
 import {
 	MIN_NAME_LENGTH,
 	MIN_PASSWORD_LENGTH,
 } from "@/lib/constants/validation";
-import AuthFieldError from "./auth-field-error";
 
 export default function SignUpForm({ callbackURL }: { callbackURL?: string }) {
 	const navigate = useNavigate({
@@ -104,7 +103,7 @@ export default function SignUpForm({ callbackURL }: { callbackURL?: string }) {
 								onBlur={field.handleBlur}
 								onChange={(e) => field.handleChange(e.target.value)}
 							/>
-							<AuthFieldError errors={field.state.meta.errors} />
+							<FieldError errors={field.state.meta.errors} />
 						</div>
 					)}
 				</form.Field>
@@ -121,7 +120,7 @@ export default function SignUpForm({ callbackURL }: { callbackURL?: string }) {
 								onBlur={field.handleBlur}
 								onChange={(e) => field.handleChange(e.target.value)}
 							/>
-							<AuthFieldError errors={field.state.meta.errors} />
+							<FieldError errors={field.state.meta.errors} />
 						</div>
 					)}
 				</form.Field>
@@ -138,7 +137,7 @@ export default function SignUpForm({ callbackURL }: { callbackURL?: string }) {
 								onBlur={field.handleBlur}
 								onChange={(e) => field.handleChange(e.target.value)}
 							/>
-							<AuthFieldError errors={field.state.meta.errors} />
+							<FieldError errors={field.state.meta.errors} />
 						</div>
 					)}
 				</form.Field>
@@ -164,12 +163,13 @@ export default function SignUpForm({ callbackURL }: { callbackURL?: string }) {
 			<div className="border-border border-t pt-4 text-center">
 				<p className="text-muted-foreground text-sm">
 					Already have an account?{" "}
-					<AuthRouteLink
+					<Link
 						to="/login"
-						callbackURL={callbackURL}
-						label="Sign in"
-						className="h-auto p-0 text-sm"
-					/>
+						search={callbackURL ? { callbackURL } : undefined}
+						className="text-primary underline-offset-4 hover:underline"
+					>
+						Sign in
+					</Link>
 				</p>
 			</div>
 		</div>

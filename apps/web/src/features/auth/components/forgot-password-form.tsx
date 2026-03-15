@@ -1,15 +1,15 @@
 import { useForm } from "@tanstack/react-form";
+import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import z from "zod";
+import FieldError from "@/components/form/field-error";
+import Alert from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import AuthAlert from "@/features/auth/components/auth-alert";
-import AuthRouteLink from "@/features/auth/components/auth-route-link";
 import { authClient } from "@/features/auth/lib/auth-client";
 import { getSafeCallbackPath } from "@/features/auth/lib/auth-flow";
-import AuthFieldError from "./auth-field-error";
 
 export default function ForgotPasswordForm({
 	callbackURL,
@@ -64,10 +64,10 @@ export default function ForgotPasswordForm({
 
 			{submitted ? (
 				<div className="space-y-4">
-					<AuthAlert>
+					<Alert>
 						Check your email for a password reset link. For privacy, this screen
 						looks the same whether or not the address exists.
-					</AuthAlert>
+					</Alert>
 					<p className="text-muted-foreground text-sm leading-6">
 						When the link opens, the reset page will keep you aligned with the
 						same post-auth destination.
@@ -94,7 +94,7 @@ export default function ForgotPasswordForm({
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
 								/>
-								<AuthFieldError errors={field.state.meta.errors} />
+								<FieldError errors={field.state.meta.errors} />
 							</div>
 						)}
 					</form.Field>
@@ -121,12 +121,13 @@ export default function ForgotPasswordForm({
 			<div className="border-border border-t pt-4 text-center">
 				<p className="text-muted-foreground text-sm">
 					Remembered it?{" "}
-					<AuthRouteLink
+					<Link
 						to="/login"
-						callbackURL={callbackURL}
-						label="Back to sign in"
-						className="h-auto p-0 text-sm"
-					/>
+						search={callbackURL ? { callbackURL } : undefined}
+						className="text-primary underline-offset-4 hover:underline"
+					>
+						Back to sign in
+					</Link>
 				</p>
 			</div>
 		</div>
