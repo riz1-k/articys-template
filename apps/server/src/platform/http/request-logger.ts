@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
 import type { Context, Next } from "hono";
+import { nanoid } from "nanoid";
 import { STATUS_CODES } from "@/lib/constants/status-codes";
 
 interface HttpLogger {
@@ -10,7 +10,7 @@ interface HttpLogger {
 
 export function createRequestLogger(logger: HttpLogger) {
 	return async function requestLogger(c: Context, next: Next) {
-		const requestId = c.req.header("X-Request-ID") ?? randomUUID();
+		const requestId = c.req.header("X-Request-ID") ?? nanoid();
 		c.set("requestId", requestId);
 
 		const startedAt = performance.now();

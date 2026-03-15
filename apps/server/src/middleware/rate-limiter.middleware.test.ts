@@ -119,20 +119,38 @@ describe("createRateLimiter", () => {
 		app.get("/", (c) => c.json({ ok: true }));
 
 		vi.spyOn(Date, "now").mockReturnValue(CURRENT_TIME_MS);
-		vi.spyOn(crypto, "randomUUID")
-			.mockReturnValueOnce("00000000-0000-4000-8000-000000000001")
-			.mockReturnValueOnce("00000000-0000-4000-8000-000000000002");
 
 		await app.request("http://localhost/");
 		await app.request("http://localhost/");
 
-		expect(mockRedis.zAdd).toHaveBeenNthCalledWith(1, expect.any(String), {
-			score: CURRENT_TIME_MS,
-			value: `${CURRENT_TIME_MS}:00000000-0000-4000-8000-000000000001`,
-		});
-		expect(mockRedis.zAdd).toHaveBeenNthCalledWith(2, expect.any(String), {
-			score: CURRENT_TIME_MS,
-			value: `${CURRENT_TIME_MS}:00000000-0000-4000-8000-000000000002`,
-		});
+		expect(mockRedis.zAdd).toHaveBeenCalledTimes(2);
+
+		const firstCall = mockRedis.zAdd.mock.calls[0] as [
+			string,
+			{
+				score: number;
+				value: string;
+			},
+		];
+		const secondCall = mockRedis.zAdd.mock.calls[1] as [
+			string,
+			{
+				score: number;
+				value: string;
+			},
+		];
+
+		const [, firstMember] = firstCall;
+		const [, secondMember] = secondCall;
+
+		expect(firstMember.score).toBe(CURRENT_TIME_MS);
+		expect(secondMember.score).toBe(CURRENT_TIME_MS);
+		expect(firstMember.value).toEqual(
+			expect.stringContaining(`${CURRENT_TIME_MS}:`),
+		);
+		expect(secondMember.value).toEqual(
+			expect.stringContaining(`${CURRENT_TIME_MS}:`),
+		);
+		expect(firstMember.value).not.toBe(secondMember.value);
 	});
 });

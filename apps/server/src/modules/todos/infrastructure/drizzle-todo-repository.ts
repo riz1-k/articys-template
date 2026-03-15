@@ -1,5 +1,5 @@
-import { randomUUID } from "node:crypto";
 import { and, desc, eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { db } from "@/infrastructure/database";
 import { todo } from "@/infrastructure/database/schema/todo";
 import type {
@@ -32,7 +32,7 @@ export function createDrizzleTodoRepository(): TodoRepository {
 			const [todoRecord] = await db
 				.insert(todo)
 				.values({
-					id: randomUUID(),
+					id: nanoid(),
 					userId: input.userId,
 					title: input.title,
 					description: input.description ?? null,

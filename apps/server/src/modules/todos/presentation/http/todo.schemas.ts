@@ -4,7 +4,7 @@ const TODO_TITLE_MAX_LENGTH = 160;
 const TODO_DESCRIPTION_MAX_LENGTH = 4000;
 
 export const todoIdParamsSchema = z.object({
-	id: z.string().uuid(),
+	id: z.nanoid(),
 });
 
 export const createTodoBodySchema = z.object({

@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from "hono";
+import { nanoid } from "nanoid";
 import { MS_IN_SECOND } from "@/lib/constants";
 import { STATUS_CODES } from "@/lib/constants/status-codes";
 import { ErrorCodes } from "./error-codes";
@@ -52,7 +53,7 @@ export function createRateLimiter({
 		try {
 			await store.zAdd(key, {
 				score: now,
-				value: `${now}:${crypto.randomUUID()}`,
+				value: `${now}:${nanoid()}`,
 			});
 			await store.zRemRangeByScore(key, 0, windowStart);
 			const requestCount = await store.zCard(key);
