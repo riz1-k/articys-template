@@ -13,15 +13,13 @@ import {
 import { authClient } from "@/features/auth/lib/auth-client";
 
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 
-export default function UserMenu() {
+interface UserMenuProps {
+	session: Awaited<ReturnType<typeof authClient.getSession>> | null;
+}
+
+export default function UserMenu({ session }: UserMenuProps) {
 	const navigate = useNavigate();
-	const { data: session, isPending } = authClient.useSession();
-
-	if (isPending) {
-		return <Skeleton className="h-8 w-28 rounded-none" />;
-	}
 
 	if (!session) {
 		return (

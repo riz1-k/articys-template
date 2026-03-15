@@ -1,8 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { LayoutGrid } from "lucide-react";
+import type { authClient } from "@/features/auth/lib/auth-client";
 import UserMenu from "./user-menu";
 
-export default function Header() {
+interface HeaderProps {
+	session: Awaited<ReturnType<typeof authClient.getSession>> | null;
+}
+
+export default function Header({ session }: HeaderProps) {
 	const links = [
 		{ to: "/", label: "Home" },
 		{ to: "/dashboard", label: "Dashboard" },
@@ -48,7 +53,7 @@ export default function Header() {
 				</div>
 
 				<div className="flex items-center justify-end">
-					<UserMenu />
+					<UserMenu session={session} />
 				</div>
 			</div>
 		</header>
