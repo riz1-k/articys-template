@@ -1,14 +1,15 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { appConfig } from "@/platform/config/app.config";
 import { env } from "@/platform/config/env.config";
 
 import * as schema from "./schema";
 
 const pool = new Pool({
 	connectionString: env.DATABASE_URL,
-	max: 10,
-	idleTimeoutMillis: 30000,
-	connectionTimeoutMillis: 5000,
+	max: appConfig.database.pool.max,
+	idleTimeoutMillis: appConfig.database.pool.idleTimeoutMillis,
+	connectionTimeoutMillis: appConfig.database.pool.connectionTimeoutMillis,
 });
 
 export const db = drizzle(pool, { schema });
