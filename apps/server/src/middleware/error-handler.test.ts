@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS_CODES } from "@/lib/constants";
-import { ErrorCodes } from "../lib/types/errors";
-import { AppError } from "../middleware/error-handler.middleware";
+import { AppError } from "@/platform/http/app-error";
+import { ErrorCodes } from "@/platform/http/error-codes";
 
 describe("AppError", () => {
 	it("should create an error with default code", () => {
