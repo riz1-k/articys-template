@@ -5,6 +5,7 @@ const HTTP_OK = 200;
 const HTTP_CREATED = 201;
 const HTTP_NO_CONTENT = 204;
 const HTTP_UNAUTHORIZED = 401;
+const HTTP_BAD_REQUEST = 400;
 const TODO_ID = "550e8400-e29b-41d4-a716-446655440000";
 
 function createTestDependencies(): AppDependencies {
@@ -18,6 +19,20 @@ function createTestDependencies(): AppDependencies {
 				checks: { database: "ok" as const, cache: "disabled" as const },
 				timestamp: new Date().toISOString(),
 			})),
+		},
+		http: {
+			cors: async (_c, next) => {
+				await next();
+			},
+			rateLimiter: async (_c, next) => {
+				await next();
+			},
+			requestLogger: async (_c, next) => {
+				await next();
+			},
+			securityHeaders: async (_c, next) => {
+				await next();
+			},
 		},
 		identitySessionService: {
 			getCurrentSession: vi.fn(async (headers: Headers) => {
@@ -167,5 +182,26 @@ describe("createApp todo routes", () => {
 			},
 		);
 		expect(deleteResponse.status).toBe(HTTP_NO_CONTENT);
+	});
+
+	it("returns a bad request for malformed JSON payloads", async () => {
+		const app = createApp(createTestDependencies());
+		const response = await app.request("http://localhost/api/todos", {
+			method: "POST",
+			headers: {
+				authorization: "Bearer test-user",
+				"content-type": "application/json",
+			},
+			body: "{",
+		});
+
+		expect(response.status).toBe(HTTP_BAD_REQUEST);
+		await expect(response.json()).resolves.toMatchObject({
+			success: false,
+			error: {
+				code: "VALIDATION_ERROR",
+				message: "Malformed JSON request body",
+			},
+		});
 	});
 });
