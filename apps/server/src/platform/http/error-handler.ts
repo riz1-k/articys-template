@@ -1,5 +1,6 @@
 import type { Context } from "hono";
 import { STATUS_CODES } from "@/lib/constants";
+import { TodoLimitExceededError } from "@/modules/todos/domain/todo-limit-exceeded.error";
 import { logger } from "@/platform/observability/logger";
 import { AppError } from "./app-error";
 import { ErrorCodes } from "./error-codes";
@@ -29,6 +30,35 @@ export function errorHandler(err: Error, c: Context) {
 				requestId,
 			},
 			err.statusCode as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 503,
+		);
+	}
+
+	if (err instanceof TodoLimitExceededError) {
+		logger.warn(
+			{
+				requestId,
+				code: ErrorCodes.SUBSCRIPTION_REQUIRED,
+				statusCode: STATUS_CODES.FORBIDDEN,
+				details: {
+					maxTodos: err.maxTodos,
+				},
+			},
+			err.message,
+		);
+
+		return c.json(
+			{
+				success: false,
+				error: {
+					code: ErrorCodes.SUBSCRIPTION_REQUIRED,
+					message: err.message,
+					details: {
+						maxTodos: err.maxTodos,
+					},
+				},
+				requestId,
+			},
+			STATUS_CODES.FORBIDDEN,
 		);
 	}
 

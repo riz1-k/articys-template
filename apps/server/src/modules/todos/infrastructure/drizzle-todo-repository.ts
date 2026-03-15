@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { db } from "@/infrastructure/database";
 import { todo } from "@/infrastructure/database/schema/todo";
@@ -26,6 +26,15 @@ export function createDrizzleTodoRepository(): TodoRepository {
 				.from(todo)
 				.where(eq(todo.userId, userId))
 				.orderBy(desc(todo.createdAt));
+		},
+
+		async countByUserId(userId) {
+			const [result] = await db
+				.select({ count: count() })
+				.from(todo)
+				.where(eq(todo.userId, userId));
+
+			return Number(result?.count ?? 0);
 		},
 
 		async create(input: CreateTodoInput) {

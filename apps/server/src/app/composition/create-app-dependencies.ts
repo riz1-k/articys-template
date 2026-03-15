@@ -1,6 +1,10 @@
 import type { AppDependencies } from "@/app/app-dependencies";
 import { redis } from "@/infrastructure/cache";
 import { createEmailDelivery } from "@/infrastructure/email/create-email-delivery";
+import { createBillingUseCases } from "@/modules/billing/application/create-billing-use-cases";
+import { createTodoEntitlementService } from "@/modules/billing/application/create-todo-entitlement-service";
+import { createDrizzleBillingRepository } from "@/modules/billing/infrastructure/drizzle-billing.repository";
+import { createStripeGateway } from "@/modules/billing/infrastructure/stripe-gateway";
 import { createHealthStatusService } from "@/modules/health/application/create-health-status-service";
 import { createCacheHealthCheck } from "@/modules/health/infrastructure/cache-health-check";
 import { createDatabaseHealthCheck } from "@/modules/health/infrastructure/database-health-check";
@@ -34,9 +38,31 @@ export function createAppDependencies(): AppDependencies {
 	const identitySessionService = createIdentitySessionService(
 		createBetterAuthSessionPort(auth),
 	);
+	const todoRepository = createDrizzleTodoRepository();
+	const billingRepository = createDrizzleBillingRepository();
+	const todoEntitlementService =
+		createTodoEntitlementService(billingRepository);
+	const billingUseCases = createBillingUseCases({
+		billingGateway: createStripeGateway({
+			secretKey: env.STRIPE_SECRET_KEY,
+			webhookSecret: env.STRIPE_WEBHOOK_SECRET,
+			priceIds: {
+				monthly: env.STRIPE_PRICE_ID_MONTHLY,
+				yearly: env.STRIPE_PRICE_ID_YEARLY,
+			},
+		}),
+		billingRepository,
+		successUrl: env.STRIPE_SUCCESS_URL,
+		cancelUrl: env.STRIPE_CANCEL_URL,
+		todoCountPort: {
+			countTodosByUserId: (userId) => todoRepository.countByUserId(userId),
+		},
+		todoEntitlementPort: todoEntitlementService,
+	});
 
 	return {
 		auth,
+		billingUseCases,
 		identitySessionService,
 		healthStatusService: createHealthStatusService({
 			database: createDatabaseHealthCheck(),
@@ -52,6 +78,6 @@ export function createAppDependencies(): AppDependencies {
 			requestLogger: createRequestLogger(logger),
 			securityHeaders: createSecurityHeaders(appConfig.security),
 		},
-		todoUseCases: createTodoUseCases(createDrizzleTodoRepository()),
+		todoUseCases: createTodoUseCases(todoRepository, todoEntitlementService),
 	};
 }

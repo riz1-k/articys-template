@@ -8,6 +8,13 @@
 			"when": 1773599371828,
 			"tag": "0000_serious_glorian",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1773612571142,
+			"tag": "0001_freezing_malice",
+			"breakpoints": true
 		}
 	]
 }

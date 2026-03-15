@@ -1,3 +1,4 @@
+import type { TodoEntitlementPort } from "@/modules/billing/application/todo-entitlement.port";
 import type { Todo } from "@/modules/todos/domain/todo";
 import type { TodoRepository } from "./todo.repository";
 import { createCreateTodoUseCase } from "./use-cases/create-todo.use-case";
@@ -26,9 +27,10 @@ export interface TodoUseCases {
 
 export function createTodoUseCases(
 	todoRepository: TodoRepository,
+	todoEntitlementPort: TodoEntitlementPort,
 ): TodoUseCases {
 	return {
-		createTodo: createCreateTodoUseCase(todoRepository),
+		createTodo: createCreateTodoUseCase(todoRepository, todoEntitlementPort),
 		deleteTodo: createDeleteTodoUseCase(todoRepository),
 		getTodo: createGetTodoUseCase(todoRepository),
 		listTodos: createListTodosUseCase(todoRepository),

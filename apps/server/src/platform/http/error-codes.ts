@@ -7,6 +7,7 @@ export const ErrorCodes = {
 	CONFLICT: "CONFLICT",
 	RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
 	BAD_REQUEST: "BAD_REQUEST",
+	SUBSCRIPTION_REQUIRED: "SUBSCRIPTION_REQUIRED",
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

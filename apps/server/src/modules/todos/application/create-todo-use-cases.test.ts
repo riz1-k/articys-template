@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { FREE_TODO_LIMIT } from "@/modules/billing/domain/todo-entitlement";
 import type { Todo } from "@/modules/todos/domain/todo";
+import { TodoLimitExceededError } from "@/modules/todos/domain/todo-limit-exceeded.error";
 import { createTodoUseCases } from "./create-todo-use-cases";
 import type {
 	CreateTodoInput,
@@ -18,6 +20,9 @@ function createInMemoryTodoRepository(seed: Todo[] = []): TodoRepository {
 		},
 		async listByUserId(userId) {
 			return todos.filter((todo) => todo.userId === userId);
+		},
+		async countByUserId(userId) {
+			return todos.filter((todo) => todo.userId === userId).length;
 		},
 		async create(input: CreateTodoInput) {
 			const todo: Todo = {
@@ -79,7 +84,14 @@ function createInMemoryTodoRepository(seed: Todo[] = []): TodoRepository {
 
 describe("createTodoUseCases", () => {
 	it("creates and lists todos for the current user", async () => {
-		const useCases = createTodoUseCases(createInMemoryTodoRepository());
+		const useCases = createTodoUseCases(createInMemoryTodoRepository(), {
+			getTodoEntitlement: async ({ currentTodoCount }) => ({
+				hasActiveSubscription: false,
+				maxTodos: FREE_TODO_LIMIT,
+				currentTodoCount,
+				canCreateMoreTodos: true,
+			}),
+		});
 
 		await useCases.createTodo({
 			userId: "user-1",
@@ -106,6 +118,14 @@ describe("createTodoUseCases", () => {
 					updatedAt: new Date(),
 				},
 			]),
+			{
+				getTodoEntitlement: async ({ currentTodoCount }) => ({
+					hasActiveSubscription: false,
+					maxTodos: FREE_TODO_LIMIT,
+					currentTodoCount,
+					canCreateMoreTodos: true,
+				}),
+			},
 		);
 
 		const updated = await useCases.updateTodo({
@@ -137,6 +157,14 @@ describe("createTodoUseCases", () => {
 					updatedAt: new Date(),
 				},
 			]),
+			{
+				getTodoEntitlement: async ({ currentTodoCount }) => ({
+					hasActiveSubscription: false,
+					maxTodos: FREE_TODO_LIMIT,
+					currentTodoCount,
+					canCreateMoreTodos: true,
+				}),
+			},
 		);
 
 		await expect(
@@ -145,5 +173,36 @@ describe("createTodoUseCases", () => {
 		await expect(
 			useCases.deleteTodo({ id: "todo-1", userId: "user-1" }),
 		).resolves.toBe(true);
+	});
+
+	it("blocks free users from creating more than five todos", async () => {
+		const useCases = createTodoUseCases(
+			createInMemoryTodoRepository(
+				Array.from({ length: FREE_TODO_LIMIT }, (_, index) => ({
+					id: `todo-${index + 1}`,
+					userId: "user-1",
+					title: `Todo ${index + 1}`,
+					description: null,
+					completed: false,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})),
+			),
+			{
+				getTodoEntitlement: async ({ currentTodoCount }) => ({
+					hasActiveSubscription: false,
+					maxTodos: FREE_TODO_LIMIT,
+					currentTodoCount,
+					canCreateMoreTodos: currentTodoCount < FREE_TODO_LIMIT,
+				}),
+			},
+		);
+
+		await expect(
+			useCases.createTodo({
+				userId: "user-1",
+				title: "Todo 6",
+			}),
+		).rejects.toBeInstanceOf(TodoLimitExceededError);
 	});
 });

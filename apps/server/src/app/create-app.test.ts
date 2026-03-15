@@ -1,4 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
+import { FREE_TODO_LIMIT } from "@/modules/billing/domain/todo-entitlement";
+import { TodoLimitExceededError } from "@/modules/todos/domain/todo-limit-exceeded.error";
 import { type AppDependencies, createApp } from "./create-app";
 
 const HTTP_OK = 200;
@@ -6,12 +8,46 @@ const HTTP_CREATED = 201;
 const HTTP_NO_CONTENT = 204;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_BAD_REQUEST = 400;
+const HTTP_FORBIDDEN = 403;
 const TODO_ID = "V1StGXR8_Z5jdHi6B-myT";
 
-function createTestDependencies(): AppDependencies {
+function createTestDependencies(options?: {
+	createTodoError?: Error;
+}): AppDependencies {
 	return {
 		auth: {
 			handler: vi.fn(),
+		},
+		billingUseCases: {
+			getTodoEntitlement: vi.fn(async ({ currentTodoCount }) => ({
+				hasActiveSubscription: false,
+				maxTodos: FREE_TODO_LIMIT,
+				currentTodoCount,
+				canCreateMoreTodos: currentTodoCount < FREE_TODO_LIMIT,
+			})),
+			getBillingStatus: vi.fn(async () => ({
+				customerId: "cus_123",
+				subscription: {
+					plan: "monthly" as const,
+					status: "active" as const,
+					cancelAtPeriodEnd: false,
+					currentPeriodEnd: "2026-02-01T00:00:00.000Z",
+				},
+				entitlement: {
+					hasActiveSubscription: true,
+					maxTodos: null,
+					currentTodoCount: 7,
+					canCreateMoreTodos: true,
+				},
+			})),
+			createCheckoutSession: vi.fn(async () => ({
+				sessionId: "cs_test_123",
+				url: "https://checkout.stripe.com/c/pay/cs_test_123",
+			})),
+			createBillingPortalSession: vi.fn(async () => ({
+				url: "https://billing.stripe.com/session/test",
+			})),
+			handleStripeWebhook: vi.fn(async () => {}),
 		},
 		healthStatusService: {
 			getStatus: vi.fn(async () => ({
@@ -79,15 +115,21 @@ function createTestDependencies(): AppDependencies {
 					userId: string;
 					title: string;
 					description?: string | null;
-				}) => ({
-					id: "550e8400-e29b-41d4-a716-446655440001",
-					userId,
-					title,
-					description: description ?? null,
-					completed: false,
-					createdAt: new Date("2026-01-01T00:00:00.000Z"),
-					updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-				}),
+				}) => {
+					if (options?.createTodoError) {
+						throw options.createTodoError;
+					}
+
+					return {
+						id: "550e8400-e29b-41d4-a716-446655440001",
+						userId,
+						title,
+						description: description ?? null,
+						completed: false,
+						createdAt: new Date("2026-01-01T00:00:00.000Z"),
+						updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+					};
+				},
 			),
 			getTodo: vi.fn(
 				async ({ id, userId }: { id: string; userId: string }) => ({
@@ -203,5 +245,87 @@ describe("createApp todo routes", () => {
 				message: "Malformed JSON request body",
 			},
 		});
+	});
+
+	it("returns a subscription-required error when todo creation is over the free limit", async () => {
+		const app = createApp(
+			createTestDependencies({
+				createTodoError: new TodoLimitExceededError(FREE_TODO_LIMIT),
+			}),
+		);
+		const response = await app.request("http://localhost/api/todos", {
+			method: "POST",
+			headers: {
+				authorization: "Bearer test-user",
+				"content-type": "application/json",
+			},
+			body: JSON.stringify({ title: "Todo 6" }),
+		});
+
+		expect(response.status).toBe(HTTP_FORBIDDEN);
+		await expect(response.json()).resolves.toMatchObject({
+			success: false,
+			error: {
+				code: "SUBSCRIPTION_REQUIRED",
+			},
+		});
+	});
+});
+
+describe("createApp billing routes", () => {
+	it("returns billing status for authenticated users", async () => {
+		const app = createApp(createTestDependencies());
+		const response = await app.request("http://localhost/api/billing/status", {
+			headers: {
+				authorization: "Bearer test-user",
+			},
+		});
+
+		expect(response.status).toBe(HTTP_OK);
+		await expect(response.json()).resolves.toMatchObject({
+			success: true,
+			data: {
+				subscription: {
+					plan: "monthly",
+					status: "active",
+				},
+			},
+		});
+	});
+
+	it("creates a checkout session for authenticated users", async () => {
+		const app = createApp(createTestDependencies());
+		const response = await app.request(
+			"http://localhost/api/billing/checkout-session",
+			{
+				method: "POST",
+				headers: {
+					authorization: "Bearer test-user",
+					"content-type": "application/json",
+				},
+				body: JSON.stringify({ plan: "yearly" }),
+			},
+		);
+
+		expect(response.status).toBe(HTTP_OK);
+		await expect(response.json()).resolves.toMatchObject({
+			success: true,
+			data: {
+				sessionId: "cs_test_123",
+			},
+		});
+	});
+
+	it("rejects webhook requests without a Stripe signature", async () => {
+		const app = createApp(createTestDependencies());
+		const response = await app.request(
+			"http://localhost/api/billing/webhooks/stripe",
+			{
+				method: "POST",
+				body: "{}",
+			},
+		);
+
+		expect(response.status).toBe(HTTP_BAD_REQUEST);
 	});
 });
