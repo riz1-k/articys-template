@@ -28,6 +28,8 @@ export default function TodoDashboard({
 					title={dashboard.title}
 					description={dashboard.description}
 					isSubmitting={dashboard.createTodoMutation.isPending}
+					canCreateMoreTodos={dashboard.canCreateMoreTodos}
+					upgradePrompt={dashboard.upgradePrompt}
 					onTitleChange={dashboard.setTitle}
 					onDescriptionChange={dashboard.setDescription}
 					onSubmit={() => void dashboard.handleCreateTodo()}
@@ -46,6 +48,25 @@ export default function TodoDashboard({
 			<TodoDashboardSidebar
 				total={dashboard.todos.length}
 				completed={dashboard.completedCount}
+				billingStatus={dashboard.billingQuery.data}
+				isBillingLoading={dashboard.billingQuery.isLoading}
+				isStartingMonthlyCheckout={
+					dashboard.billingActions.checkoutMutation.isPending &&
+					dashboard.billingActions.checkoutMutation.variables === "monthly"
+				}
+				isStartingYearlyCheckout={
+					dashboard.billingActions.checkoutMutation.isPending &&
+					dashboard.billingActions.checkoutMutation.variables === "yearly"
+				}
+				isOpeningPortal={dashboard.billingActions.portalMutation.isPending}
+				upgradePrompt={dashboard.upgradePrompt}
+				onUpgradeMonthly={() =>
+					void dashboard.billingActions.startCheckout("monthly")
+				}
+				onUpgradeYearly={() =>
+					void dashboard.billingActions.startCheckout("yearly")
+				}
+				onManageBilling={() => void dashboard.billingActions.openPortal()}
 			/>
 		</div>
 	);

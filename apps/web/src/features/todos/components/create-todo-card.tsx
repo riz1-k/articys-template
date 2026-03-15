@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import Alert from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -14,6 +15,8 @@ interface CreateTodoCardProps {
 	title: string;
 	description: string;
 	isSubmitting: boolean;
+	canCreateMoreTodos: boolean;
+	upgradePrompt?: string | null;
 	onTitleChange: (value: string) => void;
 	onDescriptionChange: (value: string) => void;
 	onSubmit: () => void;
@@ -23,6 +26,8 @@ export function CreateTodoCard({
 	title,
 	description,
 	isSubmitting,
+	canCreateMoreTodos,
+	upgradePrompt,
 	onTitleChange,
 	onDescriptionChange,
 	onSubmit,
@@ -54,9 +59,17 @@ export function CreateTodoCard({
 						placeholder="Optional context for the task"
 					/>
 				</div>
-				<Button onClick={onSubmit} disabled={isSubmitting}>
+				{upgradePrompt ? <Alert>{upgradePrompt}</Alert> : null}
+				<Button
+					onClick={onSubmit}
+					disabled={isSubmitting || !canCreateMoreTodos}
+				>
 					<Plus />
-					{isSubmitting ? "Saving..." : "Add Todo"}
+					{isSubmitting
+						? "Saving..."
+						: canCreateMoreTodos
+							? "Add Todo"
+							: "Upgrade to add more"}
 				</Button>
 			</CardContent>
 		</Card>

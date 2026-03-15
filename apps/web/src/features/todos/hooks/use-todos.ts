@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { todosClient } from "@/features/todos/api/todos.client";
+import { BILLING_STATUS_QUERY_KEY } from "@/features/billing/hooks/use-billing";
+import { todosClient } from "@/features/todos/api/todos-api";
 import type { TodoDto } from "@/features/todos/types/todo";
 
-const TODOS_QUERY_KEY = ["todos"] as const;
+export const TODOS_QUERY_KEY = ["todos"] as const;
 
 export function useTodosQuery() {
 	return useQuery({
@@ -21,6 +22,9 @@ export function useCreateTodoMutation() {
 				newTodo,
 				...current,
 			]);
+			void queryClient.invalidateQueries({
+				queryKey: BILLING_STATUS_QUERY_KEY,
+			});
 		},
 	});
 }
@@ -50,6 +54,9 @@ export function useDeleteTodoMutation() {
 			queryClient.setQueryData<TodoDto[]>(TODOS_QUERY_KEY, (current = []) =>
 				current.filter((todo) => todo.id !== deletedId),
 			);
+			void queryClient.invalidateQueries({
+				queryKey: BILLING_STATUS_QUERY_KEY,
+			});
 		},
 	});
 }

@@ -5,15 +5,35 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { BillingCard } from "@/features/billing/components/billing-card";
+import type { BillingStatusDto } from "@/features/billing/types/billing";
 
 interface TodoDashboardSidebarProps {
 	total: number;
 	completed: number;
+	billingStatus?: BillingStatusDto;
+	isBillingLoading: boolean;
+	isStartingMonthlyCheckout: boolean;
+	isStartingYearlyCheckout: boolean;
+	isOpeningPortal: boolean;
+	upgradePrompt?: string | null;
+	onUpgradeMonthly: () => void;
+	onUpgradeYearly: () => void;
+	onManageBilling: () => void;
 }
 
 export function TodoDashboardSidebar({
 	total,
 	completed,
+	billingStatus,
+	isBillingLoading,
+	isStartingMonthlyCheckout,
+	isStartingYearlyCheckout,
+	isOpeningPortal,
+	upgradePrompt,
+	onUpgradeMonthly,
+	onUpgradeYearly,
+	onManageBilling,
 }: TodoDashboardSidebarProps) {
 	return (
 		<aside className="space-y-6">
@@ -47,6 +67,18 @@ export function TodoDashboardSidebar({
 					</div>
 				</CardContent>
 			</Card>
+
+			<BillingCard
+				status={billingStatus}
+				isLoading={isBillingLoading}
+				isStartingMonthlyCheckout={isStartingMonthlyCheckout}
+				isStartingYearlyCheckout={isStartingYearlyCheckout}
+				isOpeningPortal={isOpeningPortal}
+				upgradePrompt={upgradePrompt}
+				onUpgradeMonthly={onUpgradeMonthly}
+				onUpgradeYearly={onUpgradeYearly}
+				onManageBilling={onManageBilling}
+			/>
 
 			<Card>
 				<CardHeader>
