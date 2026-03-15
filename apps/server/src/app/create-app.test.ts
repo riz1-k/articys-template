@@ -6,7 +6,7 @@ const HTTP_CREATED = 201;
 const HTTP_NO_CONTENT = 204;
 const HTTP_UNAUTHORIZED = 401;
 const HTTP_BAD_REQUEST = 400;
-const TODO_ID = "550e8400-e29b-41d4-a716-446655440000";
+const TODO_ID = "V1StGXR8_Z5jdHi6B-myT";
 
 function createTestDependencies(): AppDependencies {
 	return {

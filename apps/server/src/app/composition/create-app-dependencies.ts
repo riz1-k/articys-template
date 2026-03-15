@@ -4,7 +4,10 @@ import { createHealthStatusService } from "@/modules/health/application/create-h
 import { createCacheHealthCheck } from "@/modules/health/infrastructure/cache-health-check";
 import { createDatabaseHealthCheck } from "@/modules/health/infrastructure/database-health-check";
 import { createIdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
-import { auth } from "@/modules/identity/infrastructure/better-auth";
+import {
+	createBetterAuth,
+	createLoggingAuthEmailSender,
+} from "@/modules/identity/infrastructure/better-auth";
 import { createBetterAuthSessionPort } from "@/modules/identity/infrastructure/better-auth-session.port";
 import { createTodoUseCases } from "@/modules/todos/application/create-todo-use-cases";
 import { createDrizzleTodoRepository } from "@/modules/todos/infrastructure/drizzle-todo-repository";
@@ -16,6 +19,12 @@ import { createSecurityHeaders } from "@/platform/http/security-headers";
 import { logger } from "@/platform/observability/logger";
 
 export function createAppDependencies(): AppDependencies {
+	const auth = createBetterAuth(
+		createLoggingAuthEmailSender({
+			logger,
+			isProduction: appConfig.isProduction,
+		}),
+	);
 	const identitySessionService = createIdentitySessionService(
 		createBetterAuthSessionPort(auth),
 	);

@@ -1,7 +1,7 @@
 import type { IdentitySessionPort } from "@/modules/identity/application/identity-session.port";
-import type { auth } from "./better-auth";
+import type { createBetterAuth } from "./better-auth";
 
-type BetterAuth = typeof auth;
+type BetterAuth = ReturnType<typeof createBetterAuth>;
 
 export function createBetterAuthSessionPort(
 	authInstance: BetterAuth,
