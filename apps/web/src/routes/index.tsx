@@ -78,7 +78,7 @@ function HomeComponent() {
 									<ArrowRight />
 								</Button>
 							</Link>
-							<Link to="/login">
+							<Link to="/register">
 								<Button
 									variant="outline"
 									size="lg"
@@ -264,13 +264,13 @@ function HomeComponent() {
 									Go to Dashboard
 								</Button>
 							</Link>
-							<Link to="/login">
+							<Link to="/register">
 								<Button
 									variant="outline"
 									size="lg"
 									className="w-full sm:w-auto"
 								>
-									Sign In or Register
+									Create Account
 								</Button>
 							</Link>
 						</div>
