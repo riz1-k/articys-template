@@ -1,4 +1,4 @@
-import { env } from "@/env/web";
+import { env } from "@/configs/env";
 
 const HTTP_NO_CONTENT = 204;
 
