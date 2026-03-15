@@ -1,0 +1,298 @@
+import { CheckCircle2, Circle, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+
+import { serverApi, type TodoDto } from "@/lib/server-api";
+
+import { Button } from "./ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "./ui/card";
+import { Checkbox } from "./ui/checkbox";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+
+interface TodoDashboardProps {
+	userName: string;
+	userEmail: string;
+}
+
+export default function TodoDashboard({
+	userName,
+	userEmail,
+}: TodoDashboardProps) {
+	const [todos, setTodos] = useState<TodoDto[]>([]);
+	const [title, setTitle] = useState("");
+	const [description, setDescription] = useState("");
+	const [isLoading, setIsLoading] = useState(true);
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [activeTodoId, setActiveTodoId] = useState<string | null>(null);
+
+	const completedCount = useMemo(
+		() => todos.filter((todo) => todo.completed).length,
+		[todos],
+	);
+
+	async function loadTodos() {
+		setIsLoading(true);
+		try {
+			setTodos(await serverApi.listTodos());
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to load todos",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	}
+
+	useEffect(() => {
+		void loadTodos();
+	}, []);
+
+	async function handleCreateTodo() {
+		if (!title.trim()) {
+			toast.error("Title is required");
+			return;
+		}
+
+		setIsSubmitting(true);
+		try {
+			const newTodo = await serverApi.createTodo({
+				title: title.trim(),
+				description: description.trim() || null,
+			});
+			setTodos((current) => [newTodo, ...current]);
+			setTitle("");
+			setDescription("");
+			toast.success("Todo created");
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to create todo",
+			);
+		} finally {
+			setIsSubmitting(false);
+		}
+	}
+
+	async function handleToggleTodo(todo: TodoDto) {
+		setActiveTodoId(todo.id);
+		try {
+			const updatedTodo = await serverApi.updateTodo(todo.id, {
+				completed: !todo.completed,
+			});
+			setTodos((current) =>
+				current.map((item) => (item.id === todo.id ? updatedTodo : item)),
+			);
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to update todo",
+			);
+		} finally {
+			setActiveTodoId(null);
+		}
+	}
+
+	async function handleDeleteTodo(todoId: string) {
+		setActiveTodoId(todoId);
+		try {
+			await serverApi.deleteTodo(todoId);
+			setTodos((current) => current.filter((todo) => todo.id !== todoId));
+			toast.success("Todo deleted");
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to delete todo",
+			);
+		} finally {
+			setActiveTodoId(null);
+		}
+	}
+
+	return (
+		<div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1.2fr_0.8fr]">
+			<section className="space-y-6">
+				<div className="border border-border bg-linear-to-r from-amber-50 via-background to-sky-50 p-6 text-foreground dark:from-zinc-900 dark:via-background dark:to-zinc-950">
+					<p className="mb-2 font-mono text-[10px] text-muted-foreground uppercase tracking-[0.35em]">
+						Authenticated Workspace
+					</p>
+					<div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+						<div>
+							<h1 className="font-semibold text-3xl tracking-tight">
+								{userName}&apos;s todo board
+							</h1>
+							<p className="mt-2 max-w-2xl text-muted-foreground text-sm">
+								This dashboard is backed by the new authenticated todo CRUD
+								flow, using module boundaries on the server and cookie-based
+								auth via Better Auth.
+							</p>
+						</div>
+						<Button variant="outline" onClick={() => void loadTodos()}>
+							<RefreshCw />
+							Refresh
+						</Button>
+					</div>
+				</div>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Create Todo</CardTitle>
+						<CardDescription>
+							Add a new task and watch it flow through the authenticated server
+							module.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<div className="grid gap-2">
+							<Label htmlFor="todo-title">Title</Label>
+							<Input
+								id="todo-title"
+								value={title}
+								onChange={(event) => setTitle(event.target.value)}
+								placeholder="Ship integration tests"
+							/>
+						</div>
+						<div className="grid gap-2">
+							<Label htmlFor="todo-description">Description</Label>
+							<Input
+								id="todo-description"
+								value={description}
+								onChange={(event) => setDescription(event.target.value)}
+								placeholder="Optional context for the task"
+							/>
+						</div>
+						<Button
+							onClick={() => void handleCreateTodo()}
+							disabled={isSubmitting}
+						>
+							<Plus />
+							{isSubmitting ? "Saving..." : "Add Todo"}
+						</Button>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Todo List</CardTitle>
+						<CardDescription>
+							Your authenticated tasks, scoped to `{userEmail}`.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						{isLoading ? (
+							<p className="text-muted-foreground">Loading todos...</p>
+						) : todos.length === 0 ? (
+							<div className="border border-border border-dashed p-6 text-center text-muted-foreground">
+								No todos yet. Create one to exercise the new API.
+							</div>
+						) : (
+							<div className="space-y-3">
+								{todos.map((todo) => {
+									const isActive = activeTodoId === todo.id;
+
+									return (
+										<div
+											key={todo.id}
+											className="flex items-start gap-3 border border-border p-4"
+										>
+											<Checkbox
+												checked={todo.completed}
+												onCheckedChange={() => void handleToggleTodo(todo)}
+												disabled={isActive}
+											/>
+											<div className="min-w-0 flex-1">
+												<div className="flex items-center gap-2">
+													{todo.completed ? (
+														<CheckCircle2 className="size-4 text-emerald-600" />
+													) : (
+														<Circle className="size-4 text-amber-600" />
+													)}
+													<p
+														className={
+															todo.completed
+																? "text-muted-foreground line-through"
+																: "font-medium"
+														}
+													>
+														{todo.title}
+													</p>
+												</div>
+												{todo.description ? (
+													<p className="mt-1 text-muted-foreground text-xs">
+														{todo.description}
+													</p>
+												) : null}
+											</div>
+											<Button
+												variant="ghost"
+												size="icon-sm"
+												onClick={() => void handleDeleteTodo(todo.id)}
+												disabled={isActive}
+											>
+												<Trash2 />
+											</Button>
+										</div>
+									);
+								})}
+							</div>
+						)}
+					</CardContent>
+				</Card>
+			</section>
+
+			<aside className="space-y-6">
+				<Card>
+					<CardHeader>
+						<CardTitle>Progress</CardTitle>
+						<CardDescription>
+							A quick snapshot of your authenticated task state.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="grid gap-3">
+						<div className="border border-border p-4">
+							<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
+								Total
+							</p>
+							<p className="mt-2 font-semibold text-3xl">{todos.length}</p>
+						</div>
+						<div className="border border-border p-4">
+							<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
+								Completed
+							</p>
+							<p className="mt-2 font-semibold text-3xl">{completedCount}</p>
+						</div>
+						<div className="border border-border p-4">
+							<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.3em]">
+								Open
+							</p>
+							<p className="mt-2 font-semibold text-3xl">
+								{Math.max(0, todos.length - completedCount)}
+							</p>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Architecture Notes</CardTitle>
+						<CardDescription>
+							This page demonstrates the same migration path used on the server.
+						</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-3 text-muted-foreground">
+						<p>- auth session comes from Better Auth cookies</p>
+						<p>
+							- `/api/todos` is protected by the new identity session service
+						</p>
+						<p>
+							- todo CRUD flows through module use cases and a repository port
+						</p>
+					</CardContent>
+				</Card>
+			</aside>
+		</div>
+	);
+}

@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
+import TodoDashboard from "@/components/todo-dashboard";
 import { getUser } from "@/functions/get-user";
 
 export const Route = createFileRoute("/dashboard")({
@@ -21,9 +22,9 @@ function RouteComponent() {
 	const { session } = Route.useRouteContext();
 
 	return (
-		<div>
-			<h1>Dashboard</h1>
-			<p>Welcome {session?.user.name}</p>
-		</div>
+		<TodoDashboard
+			userName={session?.user.name ?? "Friend"}
+			userEmail={session?.user.email ?? "unknown"}
+		/>
 	);
 }
