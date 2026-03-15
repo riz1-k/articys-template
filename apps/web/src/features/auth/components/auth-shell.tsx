@@ -29,9 +29,9 @@ export default function AuthShell({
 }: AuthShellProps) {
 	return (
 		<main className="min-h-full bg-background">
-			<section className="border-border border-b">
-				<div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch lg:py-12">
-					<div className="flex flex-col justify-between border border-border bg-card">
+			<section className="h-[calc(100vh-64px)] border-border border-b">
+				<div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch lg:py-12">
+					<div className="flex flex-col justify-between border border-border bg-card max-md:hidden">
 						<div className="space-y-6 p-6 sm:p-8">
 							<div className="inline-flex items-center gap-2 border border-border bg-background px-3 py-1.5 font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
 								<Radar className="size-3.5" />
