@@ -30,7 +30,7 @@ describe("createAuthEmailSender", () => {
 				text: expect.stringContaining(
 					"https://app.example.com/verify-email?token=abc",
 				),
-				html: expect.stringContaining("Verify your email"),
+				html: expect.stringContaining("Verify Email"),
 			}),
 		);
 	});
@@ -59,7 +59,7 @@ describe("createAuthEmailSender", () => {
 				text: expect.stringContaining(
 					"https://app.example.com/reset-password?token=abc",
 				),
-				html: expect.stringContaining("Reset your password"),
+				html: expect.stringContaining("Reset Password"),
 			}),
 		);
 	});
