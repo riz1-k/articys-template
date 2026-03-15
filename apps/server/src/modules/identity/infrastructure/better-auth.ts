@@ -1,32 +1,15 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import type { Logger } from "pino";
 import { db } from "@/infrastructure/database";
 import * as schema from "@/infrastructure/database/schema/auth";
+import type { AuthEmailSenderPort } from "@/modules/identity/application/auth-email-sender.port";
 import { env } from "@/platform/config/env.config";
 
 const VERIFY_EMAIL_PATH = "/verify-email";
 const RESET_PASSWORD_PATH = "/reset-password";
 const RESET_PASSWORD_PATH_PREFIX = "/reset-password/";
 
-interface BetterAuthEmailSender {
-	sendPasswordResetEmail(input: {
-		user: {
-			email: string;
-			name: string;
-		};
-		resetUrl: string;
-	}): Promise<void>;
-	sendVerificationEmail(input: {
-		user: {
-			email: string;
-			name: string;
-		};
-		verificationUrl: string;
-	}): Promise<void>;
-}
-
-export function createBetterAuth(authEmailSender: BetterAuthEmailSender) {
+export function createBetterAuth(authEmailSender: AuthEmailSenderPort) {
 	return betterAuth({
 		baseURL: env.BETTER_AUTH_URL,
 		secret: env.BETTER_AUTH_SECRET,
@@ -64,42 +47,6 @@ export function createBetterAuth(authEmailSender: BetterAuthEmailSender) {
 		},
 		plugins: [],
 	});
-}
-
-export function createLoggingAuthEmailSender(input: {
-	logger: Pick<Logger, "info">;
-	isProduction: boolean;
-}): BetterAuthEmailSender {
-	if (input.isProduction) {
-		throw new Error(
-			"Auth email delivery is not configured for production. Replace the logging auth email sender with a real provider before starting the server.",
-		);
-	}
-
-	return {
-		async sendPasswordResetEmail({ user, resetUrl }) {
-			input.logger.info(
-				{
-					event: "auth.password_reset_email",
-					email: user.email,
-					name: user.name,
-					resetUrl,
-				},
-				"Password reset email queued for logging transport",
-			);
-		},
-		async sendVerificationEmail({ user, verificationUrl }) {
-			input.logger.info(
-				{
-					event: "auth.verification_email",
-					email: user.email,
-					name: user.name,
-					verificationUrl,
-				},
-				"Verification email queued for logging transport",
-			);
-		},
-	};
 }
 
 function toFrontendAuthUrl(url: string, pathname: string): string {

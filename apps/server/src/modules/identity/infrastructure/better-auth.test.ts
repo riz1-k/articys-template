@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
-const MIN_AUTH_SECRET_LENGTH = 32;
-const { betterAuthMock, drizzleAdapterMock } = vi.hoisted(() => ({
-	betterAuthMock: vi.fn((options) => ({ options })),
-	drizzleAdapterMock: vi.fn(() => "adapter"),
-}));
+const { betterAuthMock, drizzleAdapterMock, betterAuthSecret } = vi.hoisted(
+	() => ({
+		betterAuthMock: vi.fn((options) => ({ options })),
+		drizzleAdapterMock: vi.fn(() => "adapter"),
+		betterAuthSecret: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	}),
+);
 
 vi.mock("better-auth", () => ({
 	betterAuth: betterAuthMock,
@@ -16,7 +18,7 @@ vi.mock("better-auth/adapters/drizzle", () => ({
 
 vi.mock("@/platform/config/env.config", () => ({
 	env: {
-		BETTER_AUTH_SECRET: "a".repeat(MIN_AUTH_SECRET_LENGTH),
+		BETTER_AUTH_SECRET: betterAuthSecret,
 		BETTER_AUTH_URL: "https://api.example.com",
 		CORS_ORIGIN: "https://app.example.com",
 	},
@@ -26,7 +28,7 @@ vi.mock("@/infrastructure/database", () => ({
 	db: {},
 }));
 
-import { createBetterAuth, createLoggingAuthEmailSender } from "./better-auth";
+import { createBetterAuth } from "./better-auth";
 
 describe("better-auth infrastructure", () => {
 	it("configures secure cross-origin cookies for https deployments", () => {
@@ -100,45 +102,5 @@ describe("better-auth infrastructure", () => {
 			resetUrl:
 				"https://app.example.com/reset-password?callbackURL=%2Fdashboard&token=reset-token",
 		});
-	});
-
-	it("logs verification and reset emails outside production", async () => {
-		const logger = {
-			info: vi.fn(),
-		};
-		const sender = createLoggingAuthEmailSender({
-			logger,
-			isProduction: false,
-		});
-
-		await sender.sendVerificationEmail({
-			user: {
-				email: "test@example.com",
-				name: "Test User",
-			},
-			verificationUrl: "https://app.example.com/verify-email?token=abc",
-		});
-		await sender.sendPasswordResetEmail({
-			user: {
-				email: "test@example.com",
-				name: "Test User",
-			},
-			resetUrl: "https://app.example.com/reset-password?token=abc",
-		});
-
-		expect(logger.info).toHaveBeenCalledTimes(2);
-	});
-
-	it("fails fast in production", () => {
-		expect(() =>
-			createLoggingAuthEmailSender({
-				logger: {
-					info: vi.fn(),
-				},
-				isProduction: true,
-			}),
-		).toThrow(
-			"Auth email delivery is not configured for production. Replace the logging auth email sender with a real provider before starting the server.",
-		);
 	});
 });

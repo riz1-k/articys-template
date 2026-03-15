@@ -15,9 +15,15 @@ catalogs:
     dotenv:
       specifier: ^17.2.2
       version: 17.3.1
+    redis:
+      specifier: ^4.7.0
+      version: 4.7.1
     typescript:
       specifier: ^5
       version: 5.9.3
+    vitest:
+      specifier: ^3.0.0
+      version: 3.2.4
     zod:
       specifier: ^4.1.13
       version: 4.3.6
@@ -77,6 +83,9 @@ importers:
       redis:
         specifier: 'catalog:'
         version: 4.7.1
+      resend:
+        specifier: 6.0.2
+        version: 6.0.2
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -3777,6 +3786,15 @@ packages:
 
   reselect@5.1.1:
     resolution: {integrity: sha512-K/BG6eIky/SBpzfHZv/dd+9JBFiS4SWV7FIujVyJRux6e45+73RaUHXLmIR1f7WOMaQ0U1km6qwklRQxpJJY0w==}
+
+  resend@6.0.2:
+    resolution: {integrity: sha512-um08qWpSVvEVqAePEy/bsa7pqtnJK+qTCZ0Et7YE7xuqM46J0C9gnSbIJKR3LIcRVMgO9jUeot8rH0UI84eqMQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@react-email/render': ^1.1.0
+    peerDependenciesMeta:
+      '@react-email/render':
+        optional: true
 
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -7764,6 +7782,8 @@ snapshots:
   require-from-string@2.0.2: {}
 
   reselect@5.1.1: {}
+
+  resend@6.0.2: {}
 
   resolve-from@4.0.0: {}
 
