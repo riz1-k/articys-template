@@ -4,6 +4,8 @@ import { createDatabaseHealthCheck } from "@/modules/health/infrastructure/datab
 import { createIdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
 import { auth } from "@/modules/identity/infrastructure/better-auth";
 import { createBetterAuthSessionPort } from "@/modules/identity/infrastructure/better-auth-session.port";
+import { createTodoUseCases } from "@/modules/todos/application/create-todo-use-cases";
+import { createDrizzleTodoRepository } from "@/modules/todos/infrastructure/drizzle-todo-repository";
 
 export function createAppDependencies() {
 	const identitySessionService = createIdentitySessionService(
@@ -17,5 +19,6 @@ export function createAppDependencies() {
 			database: createDatabaseHealthCheck(),
 			cache: createCacheHealthCheck(),
 		}),
+		todoUseCases: createTodoUseCases(createDrizzleTodoRepository()),
 	};
 }
