@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
 	ArrowRight,
-	LockKeyhole,
+	CreditCard,
+	LayoutDashboard,
 	Orbit,
 	Radar,
 	SquareCheckBig,
@@ -19,55 +20,76 @@ export const Route = createFileRoute("/")({
 	component: HomeComponent,
 });
 
-const featureCards = [
+const latestUpdates = [
 	{
-		icon: LockKeyhole,
-		eyebrow: "Identity",
-		title: "Cookie-based auth that stays out of the way",
+		icon: CreditCard,
+		eyebrow: "Latest ship",
+		title: "Stripe billing is now wired into the web app",
 		description:
-			"Better Auth handles the session boundary while the UI stays focused on product flow.",
+			"Checkout, portal access, and billing success or cancel routes now exist in the frontend instead of stopping at server APIs.",
 	},
 	{
 		icon: SquareCheckBig,
-		eyebrow: "Todos",
-		title: "Feature-local state instead of component sprawl",
+		eyebrow: "Entitlements",
+		title: "Todo creation now respects subscription limits",
 		description:
-			"Todo queries and mutations live inside the todo feature, not in page-level effects.",
+			"Free accounts can hit a hard cap, get a clear upgrade prompt, and move straight into checkout from the dashboard.",
 	},
 	{
-		icon: Orbit,
-		eyebrow: "Architecture",
-		title: "Server and web are aligned without being identical",
+		icon: LayoutDashboard,
+		eyebrow: "UI polish",
+		title: "The shell was tightened up for real use",
 		description:
-			"DDD on the server, feature-first slices on the web, with clear seams between them.",
+			"Recent commits refreshed the auth layout, widened key containers, and made the header behave properly on mobile.",
 	},
 ] as const;
 
-const valuePoints = [
-	"Protected dashboard wired to the new server session service",
-	"React Query for server state instead of manual fetch orchestration",
-	"TanStack Router routes that stay thin and compositional",
+const releaseNotes = [
+	"Web billing frontend added on top of the new Stripe server module",
+	"Shared billing configuration now comes from app config instead of hardcoded URLs",
+	"Todo dashboard upgraded with billing status, usage tracking, and upgrade CTAs",
+	"Header, auth shell, and landing layout refined for smaller screens",
+] as const;
+
+const buildSurface = [
+	{
+		label: "Auth",
+		value: "Better Auth sessions and protected routes",
+	},
+	{
+		label: "Billing",
+		value: "Stripe checkout, portal, and subscription status",
+	},
+	{
+		label: "Workflow",
+		value: "A todo feature with API-backed CRUD and limits",
+	},
+	{
+		label: "Architecture",
+		value: "Feature-first web app with a DDD-style server module",
+	},
 ] as const;
 
 function HomeComponent() {
 	return (
 		<div className="bg-background">
 			<section className="border-border border-b">
-				<div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end lg:py-16">
+				<div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:py-16">
 					<div className="space-y-6">
 						<div className="inline-flex items-center gap-2 border border-border bg-card px-3 py-1.5 font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
 							<Radar className="size-3.5" />
-							Feature-first app shell
+							Latest updates from `main`
 						</div>
 
 						<div className="space-y-4">
-							<h1 className="max-w-3xl text-balance font-semibold text-4xl tracking-tight sm:text-5xl lg:text-6xl">
-								An authenticated product starter with a real application shape.
+							<h1 className="max-w-4xl text-balance font-semibold text-4xl tracking-tight sm:text-5xl lg:text-6xl">
+								Auth, billing, and a subscription-aware workflow are already in
+								place.
 							</h1>
 							<p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-								Articys is a pragmatic template for teams that want auth,
-								routing, server-backed features, and a clean architecture before
-								the project turns messy.
+								The recent commit history moved Articys past starter-template
+								territory. The app now ships Stripe billing flows, todo limits
+								tied to plan access, and a tighter web shell around the product.
 							</p>
 						</div>
 
@@ -89,13 +111,13 @@ function HomeComponent() {
 							</Link>
 						</div>
 
-						<div className="grid gap-3 sm:grid-cols-3">
-							{valuePoints.map((point) => (
+						<div className="grid gap-3 sm:grid-cols-2">
+							{releaseNotes.map((note) => (
 								<div
-									key={point}
+									key={note}
 									className="border border-border bg-card px-4 py-4 text-muted-foreground text-sm"
 								>
-									{point}
+									{note}
 								</div>
 							))}
 						</div>
@@ -108,10 +130,10 @@ function HomeComponent() {
 								<div className="flex items-center justify-between border border-border bg-background px-4 py-3">
 									<div>
 										<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
-											Current stack
+											Current shape
 										</p>
 										<p className="mt-2 font-medium text-sm">
-											TanStack Router, React Query, Better Auth, Hono
+											Protected product flow with billing-aware entitlements
 										</p>
 									</div>
 									<div className="flex size-11 items-center justify-center border border-border bg-muted">
@@ -120,32 +142,29 @@ function HomeComponent() {
 								</div>
 
 								<div className="grid gap-3 sm:grid-cols-2">
-									<div className="border border-border bg-background px-4 py-4">
-										<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
-											Web
-										</p>
-										<p className="mt-2 text-muted-foreground text-sm">
-											Feature modules, shared HTTP client, thin routes.
-										</p>
-									</div>
-									<div className="border border-border bg-background px-4 py-4">
-										<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
-											Server
-										</p>
-										<p className="mt-2 text-muted-foreground text-sm">
-											Use cases, ports, adapters, and explicit composition.
-										</p>
-									</div>
+									{buildSurface.map(({ label, value }) => (
+										<div
+											key={label}
+											className="border border-border bg-background px-4 py-4"
+										>
+											<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
+												{label}
+											</p>
+											<p className="mt-2 text-muted-foreground text-sm">
+												{value}
+											</p>
+										</div>
+									))}
 								</div>
 
 								<div className="border border-border bg-linear-to-br from-muted/50 via-card to-background px-4 py-4">
 									<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
-										Why this exists
+										What changed recently
 									</p>
 									<p className="mt-2 text-muted-foreground text-sm">
-										Most starters stop at auth screens and a blank dashboard.
-										This one gives you a working seam between UI features and a
-										real backend module.
+										The backend gained Stripe-backed billing primitives first,
+										then the web app caught up with checkout, billing status,
+										and subscription-driven dashboard behavior.
 									</p>
 								</div>
 							</div>
@@ -158,20 +177,20 @@ function HomeComponent() {
 				<div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
 					<div>
 						<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
-							What you get
+							Recent work
 						</p>
 						<h2 className="mt-2 font-semibold text-2xl tracking-tight sm:text-3xl">
-							A starting point that already behaves like an application.
+							The landing page now reflects the latest commits instead of a
+							generic starter pitch.
 						</h2>
 					</div>
 					<p className="max-w-xl text-muted-foreground text-sm">
-						The homepage now frames the product clearly instead of acting like a
-						dev scratchpad.
+						These sections map directly to the newest changes on `main`.
 					</p>
 				</div>
 
 				<div className="grid gap-4 lg:grid-cols-3">
-					{featureCards.map(({ icon: Icon, eyebrow, title, description }) => (
+					{latestUpdates.map(({ icon: Icon, eyebrow, title, description }) => (
 						<Card key={title} className="rounded-none">
 							<CardHeader className="space-y-4">
 								<div className="flex size-11 items-center justify-center border border-border bg-muted">
@@ -197,32 +216,38 @@ function HomeComponent() {
 			</section>
 
 			<section className="border-border border-y bg-card/40">
-				<div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[0.8fr_1.2fr] lg:py-14">
+				<div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-10 lg:grid-cols-[0.85fr_1.15fr] lg:py-14">
 					<div className="space-y-3">
 						<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
 							Flow
 						</p>
 						<h2 className="font-semibold text-2xl tracking-tight sm:text-3xl">
-							Start with auth, land in a real workflow, extend by feature.
+							The app path is now auth to dashboard to billing-aware feature
+							usage.
 						</h2>
 					</div>
 
-					<div className="grid gap-4 md:grid-cols-3">
+					<div className="grid gap-4 md:grid-cols-4">
 						{[
 							[
 								"01",
 								"Authenticate",
-								"Create an account or sign in through Better Auth.",
+								"Sign up or sign in through Better Auth and land inside the protected shell.",
 							],
 							[
 								"02",
-								"Enter dashboard",
-								"Hit a protected route backed by the server session boundary.",
+								"Work in todos",
+								"Use the dashboard against the real API instead of a placeholder page.",
 							],
 							[
 								"03",
-								"Ship features",
-								"Add new vertical slices without turning routes into god files.",
+								"Hit the free limit",
+								"The UI surfaces entitlement state and blocks extra creation when needed.",
+							],
+							[
+								"04",
+								"Upgrade in Stripe",
+								"Move into checkout or the customer portal without leaving the product path.",
 							],
 						].map(([step, title, description]) => (
 							<div
@@ -247,14 +272,15 @@ function HomeComponent() {
 					<div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
 						<div>
 							<p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.28em]">
-								Ready to use
+								Ready to extend
 							</p>
 							<h2 className="mt-2 font-semibold text-2xl tracking-tight sm:text-3xl">
-								Use the dashboard as the first real feature, not a placeholder.
+								Start from a product slice that already has real constraints.
 							</h2>
 							<p className="mt-3 max-w-2xl text-muted-foreground text-sm leading-6">
-								The application already has authenticated routing, a protected
-								todo flow, and a server module behind it. Extend from there.
+								Articys now gives you authenticated routing, a server-backed
+								todo feature, Stripe billing, and entitlement checks as a
+								baseline for the next module.
 							</p>
 						</div>
 
