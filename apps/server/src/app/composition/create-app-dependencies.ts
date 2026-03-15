@@ -52,8 +52,8 @@ export function createAppDependencies(): AppDependencies {
 			},
 		}),
 		billingRepository,
-		successUrl: env.STRIPE_SUCCESS_URL,
-		cancelUrl: env.STRIPE_CANCEL_URL,
+		successUrl: appConfig.billing.successUrl,
+		cancelUrl: appConfig.billing.cancelUrl,
 		todoCountPort: {
 			countTodosByUserId: (userId) => todoRepository.countByUserId(userId),
 		},

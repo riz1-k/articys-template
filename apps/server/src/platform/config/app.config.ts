@@ -35,6 +35,12 @@ export const appConfig = {
 		credentials: true,
 	},
 
+	billing: {
+		frontendUrl: env.FRONTEND_URL,
+		successUrl: new URL("/billing/success", env.FRONTEND_URL).toString(),
+		cancelUrl: new URL("/billing/cancel", env.FRONTEND_URL).toString(),
+	},
+
 	security: {
 		referrerPolicy: "strict-origin-when-cross-origin",
 		contentSecurityPolicy: "default-src 'self'",
