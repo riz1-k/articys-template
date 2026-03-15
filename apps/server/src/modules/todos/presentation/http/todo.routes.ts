@@ -1,6 +1,6 @@
 import type { Hono } from "hono";
 import { STATUS_CODES } from "@/lib/constants";
-import type { createIdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
+import type { IdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
 import type { TodoUseCases } from "@/modules/todos/application/create-todo-use-cases";
 import { created, noContent, success } from "@/platform/http/api-response";
 import { AppError } from "@/platform/http/app-error";
@@ -12,8 +12,6 @@ import {
 	todoIdParamsSchema,
 	updateTodoBodySchema,
 } from "./todo.schemas";
-
-type IdentitySessionService = ReturnType<typeof createIdentitySessionService>;
 
 function getValidatedValue<T>(
 	c: { get(key: string): unknown },

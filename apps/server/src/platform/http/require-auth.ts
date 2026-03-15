@@ -1,10 +1,12 @@
 import type { MiddlewareHandler } from "hono";
 import { STATUS_CODES } from "@/lib/constants";
-import type { createIdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
+import type { IdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
+import type {
+	AuthenticatedSession,
+	AuthenticatedUser,
+} from "@/modules/identity/application/identity-session.types";
 import { AppError } from "./app-error";
 import { ErrorCodes } from "./error-codes";
-
-type IdentitySessionService = ReturnType<typeof createIdentitySessionService>;
 
 export function requireAuth(
 	identitySessionService: IdentitySessionService,
@@ -30,21 +32,9 @@ export function requireAuth(
 }
 
 export function getCurrentUser(c: { get(key: "currentUser"): unknown }) {
-	return c.get("currentUser") as {
-		id: string;
-		email: string;
-		name: string;
-		image?: string | null;
-		emailVerified: boolean;
-	};
+	return c.get("currentUser") as AuthenticatedUser;
 }
 
 export function getCurrentSession(c: { get(key: "currentSession"): unknown }) {
-	return c.get("currentSession") as {
-		id: string;
-		userId: string;
-		expiresAt: Date;
-		ipAddress?: string | null;
-		userAgent?: string | null;
-	};
+	return c.get("currentSession") as AuthenticatedSession;
 }

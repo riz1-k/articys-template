@@ -1,8 +1,6 @@
 import type { Hono } from "hono";
 import { STATUS_CODES } from "@/lib/constants/status-codes";
-import type { createHealthStatusService } from "@/modules/health/application/create-health-status-service";
-
-type HealthStatusService = ReturnType<typeof createHealthStatusService>;
+import type { HealthStatusService } from "@/modules/health/application/create-health-status-service";
 
 export function registerHealthRoutes(
 	app: Hono,

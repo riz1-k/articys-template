@@ -6,10 +6,14 @@ interface HealthStatusDependencies {
 	cache: HealthCheckPort;
 }
 
+export interface HealthStatusService {
+	getStatus(): Promise<HealthStatusResult>;
+}
+
 export function createHealthStatusService({
 	database,
 	cache,
-}: HealthStatusDependencies) {
+}: HealthStatusDependencies): HealthStatusService {
 	return {
 		async getStatus(): Promise<HealthStatusResult> {
 			const [dbHealthy, cacheHealthy] = await Promise.all([
