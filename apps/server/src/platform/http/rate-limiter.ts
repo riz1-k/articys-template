@@ -50,7 +50,10 @@ export function createRateLimiter({
 		const windowStart = now - windowMs;
 
 		try {
-			await store.zAdd(key, { score: now, value: `${now}` });
+			await store.zAdd(key, {
+				score: now,
+				value: `${now}:${crypto.randomUUID()}`,
+			});
 			await store.zRemRangeByScore(key, 0, windowStart);
 			const requestCount = await store.zCard(key);
 			await store.expire(key, Math.ceil(windowMs / MS_IN_SECOND));

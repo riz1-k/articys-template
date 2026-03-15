@@ -1,5 +1,5 @@
 import type { Server } from "bun";
-import { pingCache } from "@/infrastructure/cache";
+import { isCacheConfigured, pingCache } from "@/infrastructure/cache";
 import { pingDatabase } from "@/infrastructure/database";
 import { appConfig } from "@/platform/config/app.config";
 import { logger } from "@/platform/observability/logger";
@@ -20,12 +20,16 @@ export async function logStartup(
 ): Promise<void> {
 	const readyMs = startTime != null ? Date.now() - startTime : undefined;
 
-	const [dbOk, cacheOk] = await Promise.all([pingDatabase(), pingCache()]);
+	const cacheConfigured = isCacheConfigured();
+	const [dbOk, cacheOk] = await Promise.all([
+		pingDatabase(),
+		cacheConfigured ? pingCache() : Promise.resolve(false),
+	]);
 
 	const dbIcon = dbOk ? "OK" : "ERR";
 	const cacheIcon = cacheOk ? "OK" : "OFF";
 	const databaseStatus = dbOk ? "ok" : "error";
-	const cacheStatus = cacheOk ? "ok" : "disabled";
+	const cacheStatus = !cacheConfigured ? "disabled" : cacheOk ? "ok" : "error";
 
 	if (appConfig.isDevelopment) {
 		logger.info(

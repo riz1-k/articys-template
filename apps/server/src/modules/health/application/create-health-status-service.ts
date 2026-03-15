@@ -16,18 +16,19 @@ export function createHealthStatusService({
 }: HealthStatusDependencies): HealthStatusService {
 	return {
 		async getStatus(): Promise<HealthStatusResult> {
-			const [dbHealthy, cacheHealthy] = await Promise.all([
+			const [databaseStatus, cacheStatus] = await Promise.all([
 				database.check(),
 				cache.check(),
 			]);
 
 			return {
-				status: dbHealthy ? "ok" : "degraded",
+				status:
+					databaseStatus === "error" || cacheStatus === "error"
+						? "degraded"
+						: "ok",
 				checks: {
-					[database.name]: dbHealthy ? "ok" : "error",
-					[cache.name]: cacheHealthy
-						? "ok"
-						: (cache.disabledStatus ?? "disabled"),
+					[database.name]: databaseStatus,
+					[cache.name]: cacheStatus,
 				},
 				timestamp: new Date().toISOString(),
 			};

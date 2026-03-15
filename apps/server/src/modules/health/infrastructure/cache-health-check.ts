@@ -3,13 +3,12 @@ import { isCacheConfigured, pingCache } from "@/infrastructure/cache";
 export function createCacheHealthCheck() {
 	return {
 		name: "cache",
-		disabledStatus: "disabled" as const,
 		async check() {
 			if (!isCacheConfigured()) {
-				return false;
+				return "disabled" as const;
 			}
 
-			return pingCache();
+			return (await pingCache()) ? ("ok" as const) : ("error" as const);
 		},
 	};
 }

@@ -96,4 +96,43 @@ describe("createRateLimiter", () => {
 			},
 		});
 	});
+
+	it("uses unique sorted-set members for requests in the same millisecond", async () => {
+		const app = new Hono();
+
+		mockRedis.zCard.mockResolvedValue(REQUEST_COUNT_BELOW_LIMIT);
+		mockRedis.zAdd.mockResolvedValue(undefined);
+		mockRedis.zRemRangeByScore.mockResolvedValue(0);
+		mockRedis.expire.mockResolvedValue(1);
+
+		app.use(
+			"*",
+			createRateLimiter({
+				config: {
+					windowMs: RATE_LIMIT_WINDOW_MS,
+					maxRequests: MAX_REQUESTS,
+				},
+				logger: mockLogger,
+				store: mockRedis,
+			}),
+		);
+		app.get("/", (c) => c.json({ ok: true }));
+
+		vi.spyOn(Date, "now").mockReturnValue(CURRENT_TIME_MS);
+		vi.spyOn(crypto, "randomUUID")
+			.mockReturnValueOnce("00000000-0000-4000-8000-000000000001")
+			.mockReturnValueOnce("00000000-0000-4000-8000-000000000002");
+
+		await app.request("http://localhost/");
+		await app.request("http://localhost/");
+
+		expect(mockRedis.zAdd).toHaveBeenNthCalledWith(1, expect.any(String), {
+			score: CURRENT_TIME_MS,
+			value: `${CURRENT_TIME_MS}:00000000-0000-4000-8000-000000000001`,
+		});
+		expect(mockRedis.zAdd).toHaveBeenNthCalledWith(2, expect.any(String), {
+			score: CURRENT_TIME_MS,
+			value: `${CURRENT_TIME_MS}:00000000-0000-4000-8000-000000000002`,
+		});
+	});
 });

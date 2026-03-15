@@ -1,5 +1,4 @@
 export interface HealthCheckPort {
 	name: string;
-	check(): Promise<boolean>;
-	disabledStatus?: "disabled" | "error";
+	check(): Promise<"ok" | "error" | "disabled">;
 }

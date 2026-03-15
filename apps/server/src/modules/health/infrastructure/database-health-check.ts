@@ -4,7 +4,7 @@ export function createDatabaseHealthCheck() {
 	return {
 		name: "database",
 		async check() {
-			return pingDatabase();
+			return (await pingDatabase()) ? ("ok" as const) : ("error" as const);
 		},
 	};
 }

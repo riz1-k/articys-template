@@ -5,6 +5,7 @@ import {
 import { appConfig } from "@/platform/config/app.config";
 import { logger } from "@/platform/observability/logger";
 import { logStartup } from "@/platform/observability/startup-logger";
+import { createAppDependencies } from "./composition/create-app-dependencies";
 import { createApp } from "./create-app";
 
 export async function startServer() {
@@ -12,7 +13,7 @@ export async function startServer() {
 
 	await initializeInfrastructure();
 
-	const app = createApp();
+	const app = createApp(createAppDependencies());
 	const server = Bun.serve({
 		fetch: app.fetch,
 		port: appConfig.server.port,
