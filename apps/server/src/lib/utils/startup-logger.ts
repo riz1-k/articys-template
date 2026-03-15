@@ -1,8 +1,8 @@
 import type { Server } from "bun";
 import { pingCache } from "@/infrastructure/cache";
 import { pingDatabase } from "@/infrastructure/database";
-import { appConfig } from "@/lib/configs/app.config";
-import { logger } from "./logger";
+import { appConfig } from "@/platform/config/app.config";
+import { logger } from "@/platform/observability/logger";
 
 const MS_PER_SECOND = 1000;
 

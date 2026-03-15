@@ -1,12 +1,1 @@
-export const ErrorCodes = {
-	INTERNAL_ERROR: "INTERNAL_ERROR",
-	VALIDATION_ERROR: "VALIDATION_ERROR",
-	NOT_FOUND: "NOT_FOUND",
-	UNAUTHORIZED: "UNAUTHORIZED",
-	FORBIDDEN: "FORBIDDEN",
-	CONFLICT: "CONFLICT",
-	RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
-	BAD_REQUEST: "BAD_REQUEST",
-} as const;
-
-export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+export { type ErrorCode, ErrorCodes } from "@/platform/http/error-codes";

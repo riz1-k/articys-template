@@ -1,5 +1,5 @@
 import { MS_IN_SECOND, SECONDS_PER_MINUTE } from "@/lib/constants";
-import { env } from "./env.config";
+import { env } from "@/platform/config/env.config";
 
 export const appConfig = {
 	env: env.NODE_ENV,

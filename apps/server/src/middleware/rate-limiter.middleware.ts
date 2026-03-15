@@ -1,8 +1,8 @@
 import type { MiddlewareHandler } from "hono";
 import { MS_IN_SECOND } from "@/lib/constants";
 import { STATUS_CODES } from "@/lib/constants/status-codes";
+import { logger } from "@/platform/observability/logger";
 import { redis } from "../infrastructure/cache";
-import { logger } from "../lib/utils/logger";
 
 export interface RateLimiterConfig {
 	windowMs: number;

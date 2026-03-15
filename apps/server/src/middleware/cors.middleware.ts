@@ -1,5 +1,5 @@
 import { cors } from "hono/cors";
-import { env } from "../lib/configs/env.config";
+import { env } from "@/platform/config/env.config";
 
 export const corsMiddleware = cors({
 	origin: env.CORS_ORIGIN,

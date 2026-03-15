@@ -1,10 +1,14 @@
 import { createClient, type RedisClientType } from "redis";
-import { env } from "../../lib/configs/env.config";
-import { logger } from "../../lib/utils/logger";
+import { env } from "@/platform/config/env.config";
+import { logger } from "@/platform/observability/logger";
 
 export const redis: RedisClientType | null = env.REDIS_URL
 	? createClient({ url: env.REDIS_URL })
 	: null;
+
+export function isCacheConfigured(): boolean {
+	return redis != null;
+}
 
 if (redis) {
 	redis.on("error", (err) => {
