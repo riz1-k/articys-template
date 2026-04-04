@@ -1,20 +1,20 @@
 import { Hono } from "hono";
-import { errorHandler } from "@/platform/http/error-handler";
-import type { AppDependencies } from "./app-dependencies";
-import { registerRoutes } from "./register-routes";
+import { errorHandler } from "@/core/http/error-handler";
+import type { AppContext } from "./create-context";
+import { registerFeatures } from "./register-features";
 
-export type { AppDependencies } from "./app-dependencies";
+export type { AppContext } from "./create-context";
 
-export function createApp(dependencies: AppDependencies) {
+export function createApp(context: AppContext) {
 	const app = new Hono();
 
-	app.use(dependencies.http.requestLogger);
-	app.use("*", dependencies.http.securityHeaders);
-	app.use("*", dependencies.http.cors);
-	app.use(dependencies.http.rateLimiter);
+	app.use(context.http.requestLogger);
+	app.use("*", context.http.securityHeaders);
+	app.use("*", context.http.cors);
+	app.use(context.http.rateLimiter);
 	app.onError(errorHandler);
 
-	registerRoutes(app, dependencies);
+	registerFeatures(app, context);
 
 	app.get("/", (c) => {
 		return c.json({ status: "ok", message: "Articys API" });

@@ -1,19 +1,19 @@
+import { appConfig } from "@/core/config/app.config";
 import {
 	initializeInfrastructure,
 	shutdownInfrastructure,
-} from "@/infrastructure";
-import { appConfig } from "@/platform/config/app.config";
-import { logger } from "@/platform/observability/logger";
-import { logStartup } from "@/platform/observability/startup-logger";
-import { createAppDependencies } from "./composition/create-app-dependencies";
+} from "@/core/infrastructure";
+import { logger } from "@/core/observability/logger";
+import { logStartup } from "@/core/observability/startup-logger";
 import { createApp } from "./create-app";
+import { createAppContext } from "./create-context";
 
 export async function startServer() {
 	const startTime = Date.now();
 
 	await initializeInfrastructure();
 
-	const app = createApp(createAppDependencies());
+	const app = createApp(createAppContext());
 	const server = Bun.serve({
 		fetch: app.fetch,
 		port: appConfig.server.port,

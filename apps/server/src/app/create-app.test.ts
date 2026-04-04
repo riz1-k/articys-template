@@ -1,7 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
-import { FREE_TODO_LIMIT } from "@/modules/billing/domain/todo-entitlement";
-import { TodoLimitExceededError } from "@/modules/todos/domain/todo-limit-exceeded.error";
-import { type AppDependencies, createApp } from "./create-app";
+import { AppError } from "@/core/http/app-error";
+import { ErrorCodes } from "@/core/http/error-codes";
+import { registerAuthRoutes } from "@/features/auth/auth.routes";
+import { registerCurrentUserRoutes } from "@/features/auth/current-user.routes";
+import { registerBillingRoutes } from "@/features/billing/routes";
+import { FREE_TODO_LIMIT } from "@/features/billing/todo-entitlement";
+import { registerHealthRoutes } from "@/features/health/routes";
+import { registerShippingRoutes } from "@/features/shipping/routes";
+import { registerTodoRoutes } from "@/features/todos/routes";
+import { type AppContext, createApp } from "./create-app";
 
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;
@@ -11,51 +18,314 @@ const HTTP_BAD_REQUEST = 400;
 const HTTP_FORBIDDEN = 403;
 const TODO_ID = "V1StGXR8_Z5jdHi6B-myT";
 
-function createTestDependencies(options?: {
-	createTodoError?: Error;
-}): AppDependencies {
+function createTestContext(options?: { createTodoError?: Error }): AppContext {
+	const auth = {
+		handler: vi.fn(),
+	};
+	const billingService = {
+		getTodoEntitlement: vi.fn(async ({ currentTodoCount }) => ({
+			hasActiveSubscription: false,
+			maxTodos: FREE_TODO_LIMIT,
+			currentTodoCount,
+			canCreateMoreTodos: currentTodoCount < FREE_TODO_LIMIT,
+		})),
+		getBillingStatus: vi.fn(async () => ({
+			customerId: "cus_123",
+			subscription: {
+				plan: "monthly" as const,
+				status: "active" as const,
+				cancelAtPeriodEnd: false,
+				currentPeriodEnd: "2026-02-01T00:00:00.000Z",
+			},
+			entitlement: {
+				hasActiveSubscription: true,
+				maxTodos: null,
+				currentTodoCount: 7,
+				canCreateMoreTodos: true,
+			},
+		})),
+		createCheckoutSession: vi.fn(async () => ({
+			sessionId: "cs_test_123",
+			url: "https://checkout.stripe.com/c/pay/cs_test_123",
+		})),
+		createBillingPortalSession: vi.fn(async () => ({
+			url: "https://billing.stripe.com/session/test",
+		})),
+		handleStripeWebhook: vi.fn(async () => {}),
+	};
+	const healthService = {
+		getStatus: vi.fn(async () => ({
+			status: "ok" as const,
+			checks: { database: "ok" as const, cache: "disabled" as const },
+			timestamp: new Date().toISOString(),
+		})),
+	};
+	const identitySessionService = {
+		getCurrentSession: vi.fn(async (headers: Headers) => {
+			if (headers.get("authorization") !== "Bearer test-user") {
+				return null;
+			}
+
+			return {
+				user: {
+					id: "user-1",
+					email: "test@example.com",
+					name: "Test User",
+					image: null,
+					emailVerified: true,
+				},
+				session: {
+					id: "session-1",
+					userId: "user-1",
+					expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+					ipAddress: null,
+					userAgent: "vitest",
+				},
+			};
+		}),
+	};
+	const shippingService = {
+		getOffices: vi.fn(async () => []),
+		getOfficeByCode: vi.fn(async () => null),
+		getCities: vi.fn(async () => []),
+		getCountries: vi.fn(async () => []),
+		getStreets: vi.fn(async () => []),
+		getQuarters: vi.fn(async () => []),
+		validateAddress: vi.fn(async () => ({})),
+		getAddressServiceTimes: vi.fn(async () => ({
+			serviceOffice: {
+				id: 1,
+				code: "1000",
+				isMPS: false,
+				isAPS: false,
+				name: "Office",
+				nameEn: "Office",
+				phones: [],
+				emails: [],
+				address: {
+					id: null,
+					city: {
+						id: 1,
+						country: {
+							id: 1,
+							code2: "BG",
+							code3: "BGR",
+							name: "Bulgaria",
+							nameEn: "Bulgaria",
+							isEU: true,
+						},
+						postCode: "1000",
+						name: "Sofia",
+						nameEn: "Sofia",
+						regionName: null,
+						regionNameEn: null,
+						phoneCode: null,
+						location: null,
+						expressCityDeliveries: true,
+						monday: true,
+						tuesday: true,
+						wednesday: true,
+						thursday: true,
+						friday: true,
+						saturday: false,
+						sunday: false,
+						serviceDays: 5,
+						zoneId: null,
+						zoneName: null,
+						zoneNameEn: null,
+						servingOffices: [],
+					},
+					fullAddress: "Address",
+					fullAddressEn: "Address",
+					quarter: null,
+					street: null,
+					num: "1",
+					other: "",
+					location: null,
+					zip: null,
+					hezid: null,
+				},
+				info: "",
+				currency: "BGN",
+				language: null,
+				normalBusinessHoursFrom: 900,
+				normalBusinessHoursTo: 1800,
+				halfDayBusinessHoursFrom: 900,
+				halfDayBusinessHoursTo: 1300,
+				shipmentTypes: [],
+				partnerCode: "",
+				hubCode: "",
+				hubName: "",
+				hubNameEn: "",
+				isDrive: false,
+			},
+			serviceOfficeLatitude: 0,
+			serviceOfficeLongitude: 0,
+		})),
+		getNearestOffices: vi.fn(async () => ({})),
+		calculateShipment: vi.fn(async () => ({
+			payAfterAcceptIgnored: "",
+		})),
+		validateShipment: vi.fn(async () => ({
+			payAfterAcceptIgnored: "",
+		})),
+		createShipment: vi.fn(async () => ({
+			upstream: { payAfterAcceptIgnored: "" },
+			storedShipment: null,
+		})),
+		createShipments: vi.fn(async () => ({
+			upstream: {},
+			storedShipments: [],
+		})),
+		deleteShipments: vi.fn(async () => ({})),
+		updateShipment: vi.fn(async () => ({
+			upstream: {
+				label: {
+					rejectOriginalParcelPaySide: "",
+					rejectReturnParcelPaySide: "",
+					shipmentEdition: {
+						shipmentNum: 1,
+						editionNum: 1,
+						editionType: "edit",
+						editionError: "",
+						price: "0",
+						currency: "BGN",
+					},
+					previousShipment: {
+						shipmentNumber: 1,
+						reason: "",
+						pdfURL: "",
+					},
+					shortDeliveryStatus: "Created",
+					shortDeliveryStatusEn: "Created",
+				},
+			},
+			storedShipment: null,
+		})),
+		updateShipments: vi.fn(async () => ({
+			upstream: {},
+			storedShipments: [],
+		})),
+		checkShipmentEditability: vi.fn(async () => ({})),
+		groupShipments: vi.fn(async () => ({
+			label: {
+				rejectOriginalParcelPaySide: "",
+				rejectReturnParcelPaySide: "",
+				shipmentEdition: {
+					shipmentNum: 1,
+					editionNum: 1,
+					editionType: "group",
+					editionError: "",
+					price: "0",
+					currency: "BGN",
+				},
+				previousShipment: {
+					shipmentNumber: 1,
+					reason: "",
+					pdfURL: "",
+				},
+				shortDeliveryStatus: "Created",
+				shortDeliveryStatusEn: "Created",
+			},
+		})),
+		cancelShipmentGroup: vi.fn(async () => ({
+			status: "ok",
+		})),
+		requestCourier: vi.fn(async () => ({
+			upstream: {},
+			storedShipments: [],
+		})),
+		getShipmentStatuses: vi.fn(async () => ({})),
+		getCourierRequestStatuses: vi.fn(async () => ({})),
+		getMyAwb: vi.fn(async () => ({
+			dateFrom: "2026-01-01",
+			dateTo: "2026-01-31",
+			page: 1,
+			totalPages: 1,
+			results: [],
+		})),
+		setItuCode: vi.fn(async () => ({})),
+		trackShipment: vi.fn(async () => null),
+		getClientProfiles: vi.fn(async () => ({})),
+		createCdAgreement: vi.fn(async () => ({})),
+		runThreeWayLogistics: vi.fn(async () => ({})),
+		getPaymentReport: vi.fn(async () => ({})),
+		listLocalShipments: vi.fn(async () => []),
+		getLocalShipment: vi.fn(async () => null),
+	};
+	const todoService = {
+		listTodos: vi.fn(async ({ userId }: { userId: string }) => [
+			{
+				id: TODO_ID,
+				userId,
+				title: "Write integration tests",
+				description: null,
+				completed: false,
+				createdAt: new Date("2026-01-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+			},
+		]),
+		createTodo: vi.fn(
+			async ({
+				userId,
+				title,
+				description,
+			}: {
+				userId: string;
+				title: string;
+				description?: string | null;
+			}) => {
+				if (options?.createTodoError) {
+					throw options.createTodoError;
+				}
+
+				return {
+					id: "550e8400-e29b-41d4-a716-446655440001",
+					userId,
+					title,
+					description: description ?? null,
+					completed: false,
+					createdAt: new Date("2026-01-01T00:00:00.000Z"),
+					updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+				};
+			},
+		),
+		getTodo: vi.fn(async ({ id, userId }: { id: string; userId: string }) => ({
+			id,
+			userId,
+			title: "Write integration tests",
+			description: null,
+			completed: false,
+			createdAt: new Date("2026-01-01T00:00:00.000Z"),
+			updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+		})),
+		updateTodo: vi.fn(
+			async ({
+				id,
+				userId,
+				title,
+				description,
+				completed,
+			}: {
+				id: string;
+				userId: string;
+				title?: string;
+				description?: string | null;
+				completed?: boolean;
+			}) => ({
+				id,
+				userId,
+				title: title ?? "Write integration tests",
+				description: description ?? null,
+				completed: completed ?? false,
+				createdAt: new Date("2026-01-01T00:00:00.000Z"),
+				updatedAt: new Date("2026-01-02T00:00:00.000Z"),
+			}),
+		),
+		deleteTodo: vi.fn(async () => true),
+	};
+
 	return {
-		auth: {
-			handler: vi.fn(),
-		},
-		billingUseCases: {
-			getTodoEntitlement: vi.fn(async ({ currentTodoCount }) => ({
-				hasActiveSubscription: false,
-				maxTodos: FREE_TODO_LIMIT,
-				currentTodoCount,
-				canCreateMoreTodos: currentTodoCount < FREE_TODO_LIMIT,
-			})),
-			getBillingStatus: vi.fn(async () => ({
-				customerId: "cus_123",
-				subscription: {
-					plan: "monthly" as const,
-					status: "active" as const,
-					cancelAtPeriodEnd: false,
-					currentPeriodEnd: "2026-02-01T00:00:00.000Z",
-				},
-				entitlement: {
-					hasActiveSubscription: true,
-					maxTodos: null,
-					currentTodoCount: 7,
-					canCreateMoreTodos: true,
-				},
-			})),
-			createCheckoutSession: vi.fn(async () => ({
-				sessionId: "cs_test_123",
-				url: "https://checkout.stripe.com/c/pay/cs_test_123",
-			})),
-			createBillingPortalSession: vi.fn(async () => ({
-				url: "https://billing.stripe.com/session/test",
-			})),
-			handleStripeWebhook: vi.fn(async () => {}),
-		},
-		healthStatusService: {
-			getStatus: vi.fn(async () => ({
-				status: "ok" as const,
-				checks: { database: "ok" as const, cache: "disabled" as const },
-				timestamp: new Date().toISOString(),
-			})),
-		},
 		http: {
 			cors: async (_c, next) => {
 				await next();
@@ -70,278 +340,47 @@ function createTestDependencies(options?: {
 				await next();
 			},
 		},
-		identitySessionService: {
-			getCurrentSession: vi.fn(async (headers: Headers) => {
-				if (headers.get("authorization") !== "Bearer test-user") {
-					return null;
-				}
-
-				return {
-					user: {
-						id: "user-1",
-						email: "test@example.com",
-						name: "Test User",
-						image: null,
-						emailVerified: true,
-					},
-					session: {
-						id: "session-1",
-						userId: "user-1",
-						expiresAt: new Date("2030-01-01T00:00:00.000Z"),
-						ipAddress: null,
-						userAgent: "vitest",
-					},
-				};
-			}),
-		},
-		shippingUseCases: {
-			getOffices: vi.fn(async () => []),
-			getOfficeByCode: vi.fn(async () => null),
-			getCities: vi.fn(async () => []),
-			getCountries: vi.fn(async () => []),
-			getStreets: vi.fn(async () => []),
-			getQuarters: vi.fn(async () => []),
-			validateAddress: vi.fn(async () => ({})),
-			getAddressServiceTimes: vi.fn(async () => ({
-				serviceOffice: {
-					id: 1,
-					code: "1000",
-					isMPS: false,
-					isAPS: false,
-					name: "Office",
-					nameEn: "Office",
-					phones: [],
-					emails: [],
-					address: {
-						id: null,
-						city: {
-							id: 1,
-							country: {
-								id: 1,
-								code2: "BG",
-								code3: "BGR",
-								name: "Bulgaria",
-								nameEn: "Bulgaria",
-								isEU: true,
-							},
-							postCode: "1000",
-							name: "Sofia",
-							nameEn: "Sofia",
-							regionName: null,
-							regionNameEn: null,
-							phoneCode: null,
-							location: null,
-							expressCityDeliveries: true,
-							monday: true,
-							tuesday: true,
-							wednesday: true,
-							thursday: true,
-							friday: true,
-							saturday: false,
-							sunday: false,
-							serviceDays: 5,
-							zoneId: null,
-							zoneName: null,
-							zoneNameEn: null,
-							servingOffices: [],
-						},
-						fullAddress: "Address",
-						fullAddressEn: "Address",
-						quarter: null,
-						street: null,
-						num: "1",
-						other: "",
-						location: null,
-						zip: null,
-						hezid: null,
-					},
-					info: "",
-					currency: "BGN",
-					language: null,
-					normalBusinessHoursFrom: 900,
-					normalBusinessHoursTo: 1800,
-					halfDayBusinessHoursFrom: 900,
-					halfDayBusinessHoursTo: 1300,
-					shipmentTypes: [],
-					partnerCode: "",
-					hubCode: "",
-					hubName: "",
-					hubNameEn: "",
-					isDrive: false,
+		features: {
+			auth: {
+				auth,
+				sessionService: identitySessionService,
+				register(app) {
+					registerAuthRoutes(app, auth);
+					registerCurrentUserRoutes(app, identitySessionService);
 				},
-				serviceOfficeLatitude: 0,
-				serviceOfficeLongitude: 0,
-			})),
-			getNearestOffices: vi.fn(async () => ({})),
-			calculateShipment: vi.fn(async () => ({
-				payAfterAcceptIgnored: "",
-			})),
-			validateShipment: vi.fn(async () => ({
-				payAfterAcceptIgnored: "",
-			})),
-			createShipment: vi.fn(async () => ({
-				upstream: { payAfterAcceptIgnored: "" },
-				storedShipment: null,
-			})),
-			createShipments: vi.fn(async () => ({
-				upstream: {},
-				storedShipments: [],
-			})),
-			deleteShipments: vi.fn(async () => ({})),
-			updateShipment: vi.fn(async () => ({
-				upstream: {
-					label: {
-						rejectOriginalParcelPaySide: "",
-						rejectReturnParcelPaySide: "",
-						shipmentEdition: {
-							shipmentNum: 1,
-							editionNum: 1,
-							editionType: "edit",
-							editionError: "",
-							price: "0",
-							currency: "BGN",
-						},
-						previousShipment: {
-							shipmentNumber: 1,
-							reason: "",
-							pdfURL: "",
-						},
-						shortDeliveryStatus: "Created",
-						shortDeliveryStatusEn: "Created",
-					},
+			},
+			billing: {
+				service: billingService,
+				register(app) {
+					registerBillingRoutes(app, identitySessionService, billingService);
 				},
-				storedShipment: null,
-			})),
-			updateShipments: vi.fn(async () => ({
-				upstream: {},
-				storedShipments: [],
-			})),
-			checkShipmentEditability: vi.fn(async () => ({})),
-			groupShipments: vi.fn(async () => ({
-				label: {
-					rejectOriginalParcelPaySide: "",
-					rejectReturnParcelPaySide: "",
-					shipmentEdition: {
-						shipmentNum: 1,
-						editionNum: 1,
-						editionType: "group",
-						editionError: "",
-						price: "0",
-						currency: "BGN",
-					},
-					previousShipment: {
-						shipmentNumber: 1,
-						reason: "",
-						pdfURL: "",
-					},
-					shortDeliveryStatus: "Created",
-					shortDeliveryStatusEn: "Created",
+			},
+			health: {
+				service: healthService,
+				register(app) {
+					registerHealthRoutes(app, healthService);
 				},
-			})),
-			cancelShipmentGroup: vi.fn(async () => ({
-				status: "ok",
-			})),
-			requestCourier: vi.fn(async () => ({
-				upstream: {},
-				storedShipments: [],
-			})),
-			getShipmentStatuses: vi.fn(async () => ({})),
-			getCourierRequestStatuses: vi.fn(async () => ({})),
-			getMyAwb: vi.fn(async () => ({
-				dateFrom: "2026-01-01",
-				dateTo: "2026-01-31",
-				page: 1,
-				totalPages: 1,
-				results: [],
-			})),
-			setItuCode: vi.fn(async () => ({})),
-			trackShipment: vi.fn(async () => null),
-			getClientProfiles: vi.fn(async () => ({})),
-			createCdAgreement: vi.fn(async () => ({})),
-			runThreeWayLogistics: vi.fn(async () => ({})),
-			getPaymentReport: vi.fn(async () => ({})),
-			listLocalShipments: vi.fn(async () => []),
-			getLocalShipment: vi.fn(async () => null),
-		},
-		todoUseCases: {
-			listTodos: vi.fn(async ({ userId }: { userId: string }) => [
-				{
-					id: TODO_ID,
-					userId,
-					title: "Write integration tests",
-					description: null,
-					completed: false,
-					createdAt: new Date("2026-01-01T00:00:00.000Z"),
-					updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+			},
+			shipping: {
+				service: shippingService,
+				register(app) {
+					registerShippingRoutes(app, identitySessionService, shippingService);
 				},
-			]),
-			createTodo: vi.fn(
-				async ({
-					userId,
-					title,
-					description,
-				}: {
-					userId: string;
-					title: string;
-					description?: string | null;
-				}) => {
-					if (options?.createTodoError) {
-						throw options.createTodoError;
-					}
-
-					return {
-						id: "550e8400-e29b-41d4-a716-446655440001",
-						userId,
-						title,
-						description: description ?? null,
-						completed: false,
-						createdAt: new Date("2026-01-01T00:00:00.000Z"),
-						updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-					};
+			},
+			todos: {
+				repository: {} as never,
+				service: todoService,
+				register(app) {
+					registerTodoRoutes(app, identitySessionService, todoService);
 				},
-			),
-			getTodo: vi.fn(
-				async ({ id, userId }: { id: string; userId: string }) => ({
-					id,
-					userId,
-					title: "Write integration tests",
-					description: null,
-					completed: false,
-					createdAt: new Date("2026-01-01T00:00:00.000Z"),
-					updatedAt: new Date("2026-01-01T00:00:00.000Z"),
-				}),
-			),
-			updateTodo: vi.fn(
-				async ({
-					id,
-					userId,
-					title,
-					description,
-					completed,
-				}: {
-					id: string;
-					userId: string;
-					title?: string;
-					description?: string | null;
-					completed?: boolean;
-				}) => ({
-					id,
-					userId,
-					title: title ?? "Write integration tests",
-					description: description ?? null,
-					completed: completed ?? false,
-					createdAt: new Date("2026-01-01T00:00:00.000Z"),
-					updatedAt: new Date("2026-01-02T00:00:00.000Z"),
-				}),
-			),
-			deleteTodo: vi.fn(async () => true),
+			},
 		},
 	};
 }
 
 describe("createApp todo routes", () => {
 	it("rejects unauthenticated todo access", async () => {
-		const app = createApp(createTestDependencies());
+		const app = createApp(createTestContext());
 
 		const response = await app.request("http://localhost/api/todos");
 
@@ -349,7 +388,7 @@ describe("createApp todo routes", () => {
 	});
 
 	it("supports authenticated todo CRUD flow", async () => {
-		const app = createApp(createTestDependencies());
+		const app = createApp(createTestContext());
 		const headers = new Headers({
 			authorization: "Bearer test-user",
 			"content-type": "application/json",
@@ -396,7 +435,7 @@ describe("createApp todo routes", () => {
 	});
 
 	it("returns a bad request for malformed JSON payloads", async () => {
-		const app = createApp(createTestDependencies());
+		const app = createApp(createTestContext());
 		const response = await app.request("http://localhost/api/todos", {
 			method: "POST",
 			headers: {
@@ -418,8 +457,13 @@ describe("createApp todo routes", () => {
 
 	it("returns a subscription-required error when todo creation is over the free limit", async () => {
 		const app = createApp(
-			createTestDependencies({
-				createTodoError: new TodoLimitExceededError(FREE_TODO_LIMIT),
+			createTestContext({
+				createTodoError: new AppError(
+					HTTP_FORBIDDEN,
+					`Free plan users can only create up to ${FREE_TODO_LIMIT} todos`,
+					ErrorCodes.SUBSCRIPTION_REQUIRED,
+					{ maxTodos: FREE_TODO_LIMIT },
+				),
 			}),
 		);
 		const response = await app.request("http://localhost/api/todos", {
@@ -443,7 +487,7 @@ describe("createApp todo routes", () => {
 
 describe("createApp billing routes", () => {
 	it("returns billing status for authenticated users", async () => {
-		const app = createApp(createTestDependencies());
+		const app = createApp(createTestContext());
 		const response = await app.request("http://localhost/api/billing/status", {
 			headers: {
 				authorization: "Bearer test-user",
@@ -463,7 +507,7 @@ describe("createApp billing routes", () => {
 	});
 
 	it("creates a checkout session for authenticated users", async () => {
-		const app = createApp(createTestDependencies());
+		const app = createApp(createTestContext());
 		const response = await app.request(
 			"http://localhost/api/billing/checkout-session",
 			{
@@ -486,7 +530,7 @@ describe("createApp billing routes", () => {
 	});
 
 	it("rejects webhook requests without a Stripe signature", async () => {
-		const app = createApp(createTestDependencies());
+		const app = createApp(createTestContext());
 		const response = await app.request(
 			"http://localhost/api/billing/webhooks/stripe",
 			{
