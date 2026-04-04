@@ -6,6 +6,7 @@ const DEFAULT_PORT = 3000;
 const MIN_AUTH_SECRET_LENGTH = 32;
 export const NODE_ENVIRONMENTS = ["development", "production", "test"] as const;
 export const LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
+export const ECONT_ENVIRONMENTS = ["demo", "production"] as const;
 
 export const env = createEnv({
 	server: {
@@ -18,6 +19,11 @@ export const env = createEnv({
 		STRIPE_WEBHOOK_SECRET: z.string().min(1),
 		STRIPE_PRICE_ID_MONTHLY: z.string().min(1),
 		STRIPE_PRICE_ID_YEARLY: z.string().min(1),
+		ECONT_USERNAME: z.string().min(1),
+		ECONT_PASSWORD: z.string().min(1),
+		ECONT_ENVIRONMENT: z.enum(ECONT_ENVIRONMENTS).default("demo"),
+		ECONT_TIMEOUT_MS: z.coerce.number().int().positive().optional(),
+		ECONT_MAX_RETRIES: z.coerce.number().int().min(0).optional(),
 		RESEND_API_KEY: z.string().min(1).optional(),
 		EMAIL_FROM: z.string().min(1).optional(),
 		EMAIL_REPLY_TO: z.string().email().optional(),

@@ -11,6 +11,11 @@ export default defineConfig({
 		environment: "node",
 		include: ["src/**/*.test.ts"],
 		exclude: ["node_modules", "dist"],
+		env: {
+			ECONT_USERNAME: "test-econt-user",
+			ECONT_PASSWORD: "test-econt-password",
+			ECONT_ENVIRONMENT: "demo",
+		},
 		coverage: {
 			provider: "v8",
 			reporter: ["text", "json", "html"],

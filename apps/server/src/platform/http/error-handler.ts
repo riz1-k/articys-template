@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { STATUS_CODES } from "@/lib/constants";
 import { TodoLimitExceededError } from "@/modules/todos/domain/todo-limit-exceeded.error";
 import { logger } from "@/platform/observability/logger";
@@ -29,7 +30,7 @@ export function errorHandler(err: Error, c: Context) {
 				},
 				requestId,
 			},
-			err.statusCode as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 503,
+			err.statusCode as ContentfulStatusCode,
 		);
 	}
 

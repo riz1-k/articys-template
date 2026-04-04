@@ -15,6 +15,13 @@
 			"when": 1773612571142,
 			"tag": "0001_freezing_malice",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1775296792154,
+			"tag": "0002_famous_elektra",
+			"breakpoints": true
 		}
 	]
 }

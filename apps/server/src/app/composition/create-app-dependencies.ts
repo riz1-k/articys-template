@@ -12,6 +12,9 @@ import { createIdentitySessionService } from "@/modules/identity/application/cre
 import { createAuthEmailSender } from "@/modules/identity/infrastructure/auth-email.sender";
 import { createBetterAuth } from "@/modules/identity/infrastructure/better-auth";
 import { createBetterAuthSessionPort } from "@/modules/identity/infrastructure/better-auth-session.port";
+import { createShippingUseCases } from "@/modules/shipping/application/create-shipping-use-cases";
+import { createDrizzleShippingRepository } from "@/modules/shipping/infrastructure/drizzle-shipping.repository";
+import { createEcontGateway } from "@/modules/shipping/infrastructure/econt-gateway";
 import { createTodoUseCases } from "@/modules/todos/application/create-todo-use-cases";
 import { createDrizzleTodoRepository } from "@/modules/todos/infrastructure/drizzle-todo-repository";
 import { appConfig } from "@/platform/config/app.config";
@@ -40,6 +43,7 @@ export function createAppDependencies(): AppDependencies {
 	);
 	const todoRepository = createDrizzleTodoRepository();
 	const billingRepository = createDrizzleBillingRepository();
+	const shippingRepository = createDrizzleShippingRepository();
 	const todoEntitlementService =
 		createTodoEntitlementService(billingRepository);
 	const billingUseCases = createBillingUseCases({
@@ -58,6 +62,16 @@ export function createAppDependencies(): AppDependencies {
 			countTodosByUserId: (userId) => todoRepository.countByUserId(userId),
 		},
 		todoEntitlementPort: todoEntitlementService,
+	});
+	const shippingUseCases = createShippingUseCases({
+		shippingGateway: createEcontGateway({
+			username: env.ECONT_USERNAME,
+			password: env.ECONT_PASSWORD,
+			environment: env.ECONT_ENVIRONMENT,
+			timeout: env.ECONT_TIMEOUT_MS,
+			maxRetries: env.ECONT_MAX_RETRIES,
+		}),
+		shippingRepository,
 	});
 
 	return {
@@ -78,6 +92,7 @@ export function createAppDependencies(): AppDependencies {
 			requestLogger: createRequestLogger(logger),
 			securityHeaders: createSecurityHeaders(appConfig.security),
 		},
+		shippingUseCases,
 		todoUseCases: createTodoUseCases(todoRepository, todoEntitlementService),
 	};
 }

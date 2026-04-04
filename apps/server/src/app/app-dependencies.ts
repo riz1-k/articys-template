@@ -3,6 +3,7 @@ import type { BillingUseCases } from "@/modules/billing/application/create-billi
 import type { HealthStatusService } from "@/modules/health/application/create-health-status-service";
 import type { AuthHandler } from "@/modules/identity/application/auth-handler.port";
 import type { IdentitySessionService } from "@/modules/identity/application/create-identity-session-service";
+import type { ShippingUseCases } from "@/modules/shipping/application/create-shipping-use-cases";
 import type { TodoUseCases } from "@/modules/todos/application/create-todo-use-cases";
 
 export interface AppHttpDependencies {
@@ -18,5 +19,6 @@ export interface AppDependencies {
 	healthStatusService: HealthStatusService;
 	http: AppHttpDependencies;
 	identitySessionService: IdentitySessionService;
+	shippingUseCases: ShippingUseCases;
 	todoUseCases: TodoUseCases;
 }
